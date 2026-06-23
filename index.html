@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V3</title>
+    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V4</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,7 +19,7 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 550px;
+            max-width: 580px;
             width: 100%;
         }
         h1 {
@@ -42,11 +42,23 @@
             border-radius: 5px;
             box-sizing: border-box;
         }
-        .radio-group, .checkbox-group {
+        .radio-group {
             display: flex;
             gap: 15px;
             margin-top: 5px;
-            flex-wrap: wrap;
+        }
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 10px;
+            margin-top: 5px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+            cursor: pointer;
         }
         button {
             width: 100%;
@@ -58,7 +70,7 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 20px;
             transition: 0.3s;
         }
         button:hover {
@@ -186,10 +198,15 @@
 
     <div class="form-group">
         <label>ประวัติการแพ้อาหาร (เลือกได้มากกว่า 1)</label>
-        <div class="checkbox-group">
-            <label><input type="checkbox" id="allergySeafood" value="seafood"> อาหารทะเล</label>
-            <label><input type="checkbox" id="allergyNut" value="nut"> ถั่วต่างๆ</label>
-            <label><input type="checkbox" id="allergyEggMilk" value="eggmilk"> นม/ไข่</label>
+        <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="seafood"> แพ้อาหารทะเล</label>
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="nut"> แพ้ถั่วต่างๆ</label>
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="eggmilk"> แพ้นม/ไข่</label>
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="flour"> แพ้แป้ง (กลูเตน)</label>
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="protein"> แพ้โปรตีน (เลี่ยงเนื้อแดง)</label>
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="cowmilk"> แพ้นมวัว</label>
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="soy"> แพ้ถั่วเหลือง (เต้าหู้/ซีอิ๊ว)</label>
+            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="sesame"> แพ้งา</label>
         </div>
     </div>
 
@@ -238,45 +255,53 @@
 </div>
 
 <script>
-// คลังวัตถุดิบแยกตามหมวดหมู่และสารแพ้ เพื่อความหลากหลายในการสุ่มเปลี่ยนอาหาร
+// คลังวัตถุดิบขนาดใหญ่ขึ้นที่ถูกระบุแท็กการแพ้ทั้ง 8 ชนิดอย่างละเอียด
 const foodPool = {
     main: [
-        { name: "ข้าวกล้อง + อกไก่ย่างสมุนไพร", tags: [] },
-        { name: "ข้าวไรซ์เบอร์รี่ + ปลากะพงนึ่งมะนาว", tags: ["seafood"] },
-        { name: "พาสต้าเส้นโฮลวีต + ซอสไก่สับมะเขือเทศ", tags: [] },
-        { name: "ข้าวกล้อง + สเต็กปลาแซลมอนย่างเกลือ", tags: ["seafood"] },
-        { name: "เส้นหมี่ข้าวกล้อง + เนื้อปลาเก๋าลวกจิ้ม", tags: ["seafood"] },
-        { name: "ข้าวกล้อง + สันในหมูอบพริกไทยดำ", tags: [] },
-        { name: "ฟักทองและมันเทศนึ่ง + อกไก่ฉีก", tags: [] },
-        { name: "ข้าวไรซ์เบอร์รี่ + คั่วกลิ้งอกไก่สับสไตล์คลีน", tags: [] }
+        { name: "ข้าวกล้อง + อกไก่ย่างเกลือและสมุนไพร", tags: [] },
+        { name: "ข้าวไรซ์เบอร์รี่ + ปลากะพงนึ่งมะนาวต้นหอม", tags: ["seafood"] },
+        { name: "เส้นหมี่ข้าวกล้อง + เนื้อปลาเก๋าลวกจิ้มพริกสด", tags: ["seafood"] },
+        { name: "ข้าวกล้อง + สเต็กปลาแซลมอนย่างเกลือธรรมชาติ", tags: ["seafood"] },
+        { name: "ข้าวกล้อง + สันในหมูอบพริกไทยดำ", tags: ["protein"] },
+        { name: "ฟักทองและมันเทศนึ่ง + อกไก่ฉีกนุ่ม", tags: [] },
+        { name: "ข้าวไรซ์เบอร์รี่ + คั่วกลิ้งอกไก่สับสไตล์คลีน", tags: [] },
+        { name: "พาสต้าเส้นโฮลวีต + ซอสไก่สับมะเขือเทศ", tags: ["flour"] },
+        { name: "สเต็กอกไก่พริกไทยดำ + แครอทย่าง", tags: [] },
+        { name: "ข้าวไรซ์เบอร์รี่ + เนื้อปลานิลนึ่งแจ่ว", tags: ["seafood"] }
     ],
     side: [
-        { name: "ไข่ต้มซอสญี่ปุ่นสูตรโซเดียมต่ำ", tags: ["eggmilk"] },
-        { name: "เต้าหู้ขาวนึ่งซีอิ๊วโรยต้นหอม", tags: [] },
-        { name: "ไข่ตุ๋นเนื้อเนียนใส่หมูสับลีน", tags: ["eggmilk"] },
-        { name: "ลูกชิ้นอกไก่ปิ้งโฮมเมด", tags: [] },
-        { name: "ไข่ม้วนญี่ปุ่นแผ่นบาง", tags: ["eggmilk"] },
-        { name: "เต้าหู้แผ่นย่างซอสมิโซะ", tags: [] },
-        { name: "กุ้งแก้วลวกจิ้มพริกเกลือ", tags: ["seafood"] },
-        { name: "เนื้อปลาเส้นลวกจิ้ม", tags: ["seafood"] }
+        { name: "ไข่ต้มยางมะตูมเหยาะเกลือชมพู", tags: ["eggmilk"] },
+        { name: "เต้าหู้ขาวนึ่งโรยต้นหอมสับ", tags: ["soy"] },
+        { name: "ไข่ตุ๋นเนื้อเนียนใส่ไก่สับลีน", tags: ["eggmilk"] },
+        { name: "ลูกชิ้นอกไก่ปิ้งโฮมเมดไร้แป้ง", tags: [] },
+        { name: "ไข่ม้วนญี่ปุ่นย่างแผ่นบาง", tags: ["eggmilk"] },
+        { name: "เต้าหู้แผ่นย่างซอสมิโซะคลีน", tags: ["soy"] },
+        { name: "กุ้งแก้วลวกจิ้มพริกเกลือสวน", tags: ["seafood"] },
+        { name: "เนื้อปลาเส้นนึ่งลวกจิ้ม", tags: ["seafood"] },
+        { name: "เนื้อสันในหมูต้มฉีกจิ้มแจ่ว", tags: ["protein"] },
+        { name: "ไข่ดาวน้ำเนื้อนุ่มไร้น้ำมัน", tags: ["eggmilk"] }
     ],
     veggie: [
-        { name: "บล็อคโคลี่และแครอทต้ม", tags: [] },
-        { name: "หน่อไม้ฝรั่งผัดเห็ดหอมน้ำมันหอยคลีน", tags: [] },
-        { name: "สลัดผักไฮโดรพอนิกส์น้ำใส", tags: [] },
-        { name: "ผักกาดขาวและกวางตุ้งลวกจิ้มแจ่ว", tags: [] },
-        { name: "ผัดถั่วลันเตาใส่กุ้งสด", tags: ["seafood"] },
-        { name: "กะหล่ำปลีตุ๋นเห็ดหอมสูตรจืด", tags: [] }
+        { name: "บล็อคโคลี่และแครอทต้มสุกหวานธรรมชาติ", tags: [] },
+        { name: "หน่อไม้ฝรั่งผัดเห็ดหอมน้ำมันมะกอกคลีน", tags: [] },
+        { name: "สลัดผักไฮโดรพอนิกส์น้ำใสไร้นม", tags: [] },
+        { name: "ผักกาดขาวและกวางตุ้งลวกจิ้มแจ่วแมงดา", tags: [] },
+        { name: "ผัดถั่วลันเตาสดใส่กุ้งแก้ว", tags: ["seafood"] },
+        { name: "กะหล่ำปลีตุ๋นเห็ดหอมร้อนๆ", tags: [] },
+        { name: "ผักกวางตุ้งไต้หวันผัดกระเทียมสด", tags: [] },
+        { name: "สลัดแตงกวาญี่ปุ่นน้ำมันงา", tags: ["sesame"] }
     ],
     snack: [
-        { name: "แอปเปิ้ลเขียวหั่นชิ้น 1 ลูก", tags: [] },
-        { name: "ฝรั่งสดกรอบวิตามินซีสูง", tags: [] },
-        { name: "โยเกิร์ตรสธรรมชาติ 0% ไขมัน", tags: ["eggmilk"] },
-        { name: "แก้วมังกรพอดีคำ", tags: [] },
-        { name: "อัลมอนด์อบอบเกลือน้อย 1 กำมือ", tags: ["nut"] },
-        { name: "กล้วยหอมทองครึ่งลูก", tags: [] },
-        { name: "ผลไม้ตระกูลเบอร์รี่สดรวม", tags: [] },
-        { name: "เม็ดมะม่วงหิมพานต์อบ", tags: ["nut"] }
+        { name: "แอปเปิ้ลเขียวสดหั่นชิ้น 1 ลูก", tags: [] },
+        { name: "ฝรั่งสดกรอบรสชาติดีวิตามินซีสูง", tags: [] },
+        { name: "โยเกิร์ตจากนมถั่วเหลืองธรรมชาติ", tags: ["soy"] },
+        { name: "แก้วมังกรเนื้อขาวหั่นพอดีคำ", tags: [] },
+        { name: "อัลมอนด์อบธรรมชาติไร้เกลือ 1 กำมือ", tags: ["nut"] },
+        { name: "กล้วยหอมทองครึ่งลูกใหญ่", tags: [] },
+        { name: "ผลไม้ตระกูลเบอร์รี่แช่แข็งสดรวม", tags: [] },
+        { name: "เม็ดมะม่วงหิมพานต์อบกรอบ", tags: ["nut"] },
+        { name: "โยเกิร์ตรสธรรมชาติ 0% ไขมันจากนมวัว", tags: ["eggmilk", "cowmilk"] },
+        { name: "ชมพู่สดแช่เย็น 2 ลูก", tags: [] }
     ]
 };
 
@@ -303,12 +328,12 @@ function calculateBMI() {
     let bmrFactor = (gender === "ชาย") ? 30 : 27;
     let dailyCalorie = weight * bmrFactor;
 
-    // ประมวลผลเกณฑ์และกำหนดปริมาณ (กรัม) ตาม BMI
+    // ประมวลผลเกณฑ์ปริมาณกรัมตามระดับ BMI
     if (bmi < 18.5) {
         status = "น้ำหนักน้อยกว่ามาตรฐาน (ผอม)"; color = "#FFC107";
         dailyCalorie += 350; 
         currentWeights = { main: "คาร์บ 160g + เนื้อสัตว์ 130g", side: "โปรตีนเสริม 80g", veggie: "ผักต่างๆ 100g", snack: "ปริมาณ 80g" };
-        todo = ["เน้นเวทเทรนนิ่งสร้างกล้ามเนื้อ", "แบ่งทานอาหารเป็นมื้อย่อยวันละ 5-6 มื้อ", "เพิ่มของว่างที่มีประโยชน์ เช่น ถั่ว หรือผลไม้พลังงานสูง"];
+        todo = ["เน้นเวทเทรนนิ่งสร้างกล้ามเนื้อ", "แบ่งทานอาหารเป็นมื้อย่อยวันละ 5-6 มื้อ", "เพิ่มของว่างที่มีประโยชน์ระหว่างวัน"];
     } else if (bmi >= 18.5 && bmi < 23.0) {
         status = "น้ำหนักปกติ (สุขภาพดี)"; color = "#28A745";
         currentWeights = { main: "คาร์บ 130g + เนื้อสัตว์ 120g", side: "โปรตีนเสริม 60g", veggie: "ผักต่างๆ 100g", snack: "ปริมาณ 70g" };
@@ -322,18 +347,19 @@ function calculateBMI() {
         status = "โรคอ้วน (ควรควบคุมน้ำหนัก)"; color = "#DC3545";
         dailyCalorie -= 500; 
         currentWeights = { main: "คาร์บต่ำมาก 60g + เนื้อสัตว์ลีน 130g", side: "โปรตีนลีน 50g", veggie: "ผักเน้นๆ 180g", snack: "ปริมาณ 50g" };
-        todo = ["งดน้ำหวาน น้ำอัดลม และเบเกอรี่อย่างเด็ดขาด", "เน้นออกกำลังกายประเภทลดแรงกระแทก เช่น เดินเร็ว หรือว่ายน้ำ เพื่อถนอมเข่า", "เน้นทานโปรตีนและผักใบเขียวให้อิ่มท้อง"];
+        todo = ["งดน้ำหวาน น้ำอัดลม และเบเกอรี่อย่างเด็ดขาด", "เน้นออกกำลังกายประเภทลดแรงกระแทก เช่น เดินเร็ว หรือว่ายน้ำ", "เน้นทานโปรตีนและผักใบเขียวให้อิ่มท้อง"];
     }
 
-    currentCalorie = Math.round(dailyCalorie / 3); // เฉลี่ยต่อมื้อ
+    currentCalorie = Math.round(dailyCalorie / 3);
 
-    // ตรวจสอบเช็คลิสต์สิ่งที่เราแพ้
+    // เก็บบันทึกข้อมูลสารอาหารที่ผู้ใช้แพ้ทั้งหมดลง Array
     activeAllergies = [];
-    if(document.getElementById('allergySeafood').checked) activeAllergies.push('seafood');
-    if(document.getElementById('allergyNut').checked) activeAllergies.push('nut');
-    if(document.getElementById('allergyEggMilk').checked) activeAllergies.push('eggmilk');
+    const checks = document.querySelectorAll('.allergy-check:checked');
+    checks.forEach(chk => {
+        activeAllergies.push(chk.value);
+    });
 
-    // อัปเดต UI ส่วนข้อมูลทั่วไป
+    // แสดงข้อมูลใน UI ทั่วไป
     document.getElementById('bmiBadge').style.backgroundColor = color;
     document.getElementById('bmiBadge').innerHTML = `เพศ: ${gender} | ค่า BMI: ${bmi.toFixed(2)}<br><small>เกณฑ์: ${status}</small>`;
     document.getElementById('calorieBadge').innerHTML = `🎯 พลังงานที่แนะนำในกล่องข้าวมื้อนี้: <b>${currentCalorie} kcal</b>`;
@@ -346,26 +372,26 @@ function calculateBMI() {
         todoList.appendChild(li);
     });
 
-    // สุ่มจัดกล่องข้าวรอบแรก
+    // ทำการจัดกล่องข้าวรอบแรก
     rerollFood();
 
     document.getElementById('result').style.display = 'block';
 }
 
-// ฟังก์ชันสุ่มดึงเมนูที่ปลอดภัย (ไม่ติดป้ายสารที่แพ้)
+// ฟังก์ชันสุ่มอาหารแบบคัดสิ่งสุ่มเสี่ยงออกร้อยเปอร์เซ็นต์
 function getRandomFood(category) {
     const filtered = foodPool[category].filter(item => {
+        // เช็คว่าไอเทมอาหารนี้มีสารที่ผู้ใช้แพ้หรือไม่
         return !item.tags.some(tag => activeAllergies.includes(tag));
     });
     
-    // หากกรองแล้วไม่เหลืออะไรเลย ให้หยิบอันแรกสุดในลิสต์แบบ Default เพื่อไม่ให้โค้ดพัง
-    const poolToUse = filtered.length > 0 ? filtered : foodPool[category];
+    // หากผู้ใช้แพ้หลายอย่างจนตัวเลือกในหมวดหมู่หมดลง ระบบจะดึง "อกไก่/ผักต้ม/แอปเปิ้ล" (อันแรกในคลัง) ที่เซฟสุดมาให้เพื่อความปลอดภัย
+    const poolToUse = filtered.length > 0 ? filtered : [foodPool[category][0]];
     const randomIndex = Math.floor(Math.random() * poolToUse.length);
     return poolToUse[randomIndex].name;
 }
 
 function rerollFood() {
-    // อัปเดตชื่ออาหารพร้อมพ่นปริมาณน้ำหนัก (กรัม) เข้าไปในช่อง
     document.getElementById('menuMain').innerText = getRandomFood('main');
     document.getElementById('weightMain').innerText = `⚖️ แนะนำ: ${currentWeights.main}`;
 

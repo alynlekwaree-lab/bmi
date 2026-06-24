@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V11</title>
+    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V12</title>
     <style>
         :root {
             --primary-blue: #2980b9;
@@ -79,7 +79,6 @@
             cursor: pointer;
         }
         
-        /* ปุ่มสไตล์ธีม ฟ้า-แดง */
         button {
             width: 100%;
             background-color: var(--primary-blue);
@@ -90,7 +89,7 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 15px;
             transition: 0.3s;
         }
         button:hover {
@@ -124,7 +123,7 @@
             background-color: #95a5a6;
         }
 
-        /* ตารางและข้อมูลในหน้าแรก */
+        /* ตารางและกล่องข้อมูล */
         .info-table {
             width: 100%;
             border-collapse: collapse;
@@ -150,6 +149,20 @@
             line-height: 1.5;
         }
 
+        /* โซนทางเลือกหน้าแรก */
+        .choice-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #ccc;
+        }
+        .choice-box {
+            background-color: #fff1f0;
+            border: 2px solid var(--primary-red);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
         /* การควบคุมหน้าจอ */
         .screen {
             display: none;
@@ -158,7 +171,7 @@
             display: block;
         }
 
-        /* การแสดงผลลัพธ์ */
+        /* ผลลัพธ์ */
         .bmi-badge {
             padding: 15px;
             border-radius: 8px;
@@ -178,7 +191,7 @@
             margin-bottom: 20px;
         }
 
-        /* ดีไซน์กล่องข้าว Bento Box คุมโทนแดงตัดช่องอาหารขาว */
+        /* กล่องข้าว Bento Box */
         .bento-box {
             background-color: var(--dark-red);
             padding: 15px;
@@ -224,7 +237,7 @@
             margin-bottom: 5px;
         }
         
-        /* ขยายปุ่มรีเซ็ตอาหารในแต่ละช่องให้ใหญ่และเด่นชัดตามคำขอ */
+        /* ปุ่มรีเซ็ตอาหารในแต่ละช่องขนาดใหญ่ */
         .btn-inline-refresh {
             position: absolute;
             bottom: 8px;
@@ -254,7 +267,7 @@
             font-weight: bold;
             font-size: 14px;
             margin: 5px 0;
-            padding-right: 40px; /* เว้นที่กันชนไม่ให้ซ้อนทับปุ่มรีเซ็ตที่ใหญ่ขึ้น */
+            padding-right: 40px;
         }
         .weight-text {
             font-size: 12px;
@@ -284,63 +297,90 @@
         .todo-section li {
             margin-bottom: 8px;
         }
+        .food-analysis-result {
+            background-color: #e8f8f5;
+            border-left: 5px solid #2cc771;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     
+    <!-- หน้าที่ 1: หน้าความรู้เกี่ยวกับ BMI และทางเลือกบริการ -->
     <div id="infoScreen" class="screen active">
-        <h1>📊 BMI คืออะไร?</h1>
+        <h1>📊 ข้อมูลดัชนีมวลกาย BMI</h1>
         <p style="line-height: 1.6; text-indent: 20px;">
-            <b>BMI (Body Mass Index)</b> หรือ ดัชนีมวลกาย คือ ค่ามาตรวัดสากลที่ใช้ประเมินความสมดุลระหว่าง <b>"น้ำหนักตัว"</b> และ <b>"ส่วนสูง"</b> เพื่อเช็คว่าปัจจุบันเราอยู่ในเกณฑ์ที่ผอมเกินไป สุขภาพดี หรือเริ่มเข้าสู่ภาวะอ้วน ซึ่งส่งผลต่อความเสี่ยงในการเกิดโรคเรื้อรังต่าง ๆ
+            <b>BMI (Body Mass Index)</b> คือ ค่าสากลที่ใช้ประเมินความสมดุลระหว่างน้ำหนักและส่วนสูง เพื่อเช็คภาวะความอ้วนหรือผอม ซึ่งส่งผลต่อความเสี่ยงโรคเรื้อรังต่าง ๆ
         </p>
 
-        <h3>📋 ตารางเกณฑ์มาตรฐาน BMI</h3>
         <table class="info-table">
             <thead>
                 <tr>
                     <th>ค่า BMI</th>
                     <th>เกณฑ์ที่ได้</th>
-                    <th>ความเสี่ยงต่อสุขภาพ</th>
+                    <th>ความเสี่ยงสุขภาพ</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>น้อยกว่า 18.5</td>
-                    <td style="color:#f1c40f; font-weight:bold;">น้ำหนักน้อย / ผอม</td>
+                    <td style="color:#f1c40f; font-weight:bold;">ผอมเกินไป</td>
                     <td>เสี่ยงขาดสารอาหาร ภูมิคุ้มกันต่ำ</td>
                 </tr>
                 <tr>
                     <td>18.5 - 22.9</td>
-                    <td style="color:#27ae60; font-weight:bold;">น้ำหนักปกติ / สุขภาพดี</td>
-                    <td>เท่าคนปกติ ความเสี่ยงโรคต่ำที่สุด</td>
+                    <td style="color:#27ae60; font-weight:bold;">ปกติ / สุขภาพดี</td>
+                    <td>ความเสี่ยงโรคต่ำที่สุดเท่าคนปกติ</td>
                 </tr>
                 <tr>
                     <td>23.0 - 24.9</td>
                     <td style="color:#e67e22; font-weight:bold;">น้ำหนักเกิน / ท้วม</td>
-                    <td>เริ่มเสี่ยงต่อโรคความดันและเบาหวาน</td>
+                    <td>เริ่มเสี่ยงต่อโรคความดัน/เบาหวาน</td>
                 </tr>
                 <tr>
                     <td>25.0 ขึ้นไป</td>
                     <td style="color:#e74c3c; font-weight:bold;">โรคอ้วน</td>
-                    <td>เสี่ยงสูงต่อโรคหัวใจ หลอดเลือด และข้อเข่า</td>
+                    <td>เสี่ยงสูงต่อโรคหัวใจและข้อเข่า</td>
                 </tr>
             </tbody>
         </table>
 
-        <h3>🏃‍♂️ ข้อควรปฏิบัติเมื่อรู้ค่า BMI</h3>
-        <div class="info-card">
-            <b>• กลุ่มที่ผอม:</b> ควรเน้นรับประทานโปรตีนและคาร์โบไฮเดรตเชิงซ้อนเพิ่มขึ้น พร้อมออกกำลังกายแบบเวทเทรนนิ่งเพื่อสร้างมวลกล้ามเนื้อ<br><br>
-            <b>• กลุ่มที่สมส่วน:</b> รักษาพฤติกรรมเดิมไว้ ทานอาหารหลากหลายครบ 5 หมู่ และออกกำลังกายสม่ำเสมอสัปดาห์ละ 150 นาที<br><br>
-            <b>• กลุ่มที่ท้วม/อ้วน:</b> ควรเริ่มจำกัดแคลอรี ลดอาหารประเภทของทอด ของมัน แป้งขัดสี น้ำหวาน และเน้นการออกกำลังกายแบบคาร์ดิโอร่วมด้วย
+        <!-- โซนทางเลือกบริการด้านล่างตามคำขอ -->
+        <div class="choice-section">
+            <h3>⚡ กรุณาเลือกบริการที่ต้องการ</h3>
+            
+            <!-- ทางเลือกที่ 1 -->
+            <button class="btn-next" onclick="changeScreen('infoScreen', 'formScreen')">🔵 1. ตรวจสอบค่า BMI และจัดกล่องข้าวอาหารสุขภาพ</button>
+            
+            <!-- ทางเลือกที่ 2 -->
+            <div class="choice-box">
+                <h4 style="margin: 0 0 10px 0; color: var(--dark-red); text-align:center;">🔴 2. ตรวจสอบปริมาณอาหารที่ควรรับประทาน (ด่วน)</h4>
+                <p style="font-size:12px; margin: 0 0 10px 0; text-align:center; color:#666;">สำหรับผู้ที่ทราบค่า BMI ของตัวเองอยู่แล้ว</p>
+                
+                <div class="form-group">
+                    <label for="quickBmi" style="font-size:14px;">กรอกค่า BMI ของคุณ:</label>
+                    <input type="number" id="quickBmi" placeholder="ตัวอย่าง: 22.5" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="quickFoodWeight" style="font-size:14px;">กรอกปริมาณอาหารรวมในมื้อนี้ (กรัม):</label>
+                    <input type="number" id="quickFoodWeight" placeholder="ตัวอย่าง: 350" step="1">
+                </div>
+                <button style="background-color: var(--primary-red); margin-top:5px;" onclick="checkFoodQuantityOnly()">ประมวลผลปริมาณอาหาร 📋</button>
+                
+                <!-- กล่องแสดงผลลัพธ์ของทางเลือกที่ 2 -->
+                <div id="quickResult" class="food-analysis-result" style="display:none;"></div>
+            </div>
         </div>
-
-        <button class="btn-next" onclick="changeScreen('infoScreen', 'formScreen')">ถัดไป: กรอกข้อมูลสุขภาพ ➡️</button>
     </div>
 
+    <!-- หน้าที่ 2: หน้าแบบฟอร์มกรอกข้อมูลสุขภาพ (สำหรับทางเลือกที่ 1) -->
     <div id="formScreen" class="screen">
-        <h2>📝 กรอกข้อมูลสุขภาพของคุณ</h2>
+        <h2>📝 กรอกข้อมูลเพื่อจัดกล่องข้าว</h2>
         
         <div class="form-group">
             <label>เพศ</label>
@@ -383,6 +423,7 @@
         <button class="btn-back" onclick="changeScreen('formScreen', 'infoScreen')">⬅️ ย้อนกลับไปหน้าแรก</button>
     </div>
 
+    <!-- หน้าที่ 3: หน้าแสดงผลลัพธ์ข้อมูลและการจัดกล่องข้าว -->
     <div id="resultScreen" class="screen">
         <h2>📊 ผลการวิเคราะห์กล่องข้าวสุขภาพ</h2>
         
@@ -498,11 +539,59 @@ let diseases = {
     gastritis: false, foodallergy: false, ibd: false, thalassemia: false
 };
 
-// ฟังก์ชันสลับหน้าจอทั่วไป
+// ฟังก์ชันสลับหน้าจอ
 function changeScreen(hideId, showId) {
     document.getElementById(hideId).classList.remove('active');
     document.getElementById(showId).classList.add('active');
     window.scrollTo(0, 0);
+}
+
+// ฟังก์ชันทางเลือกที่ 2: ตรวจสอบปริมาณอาหารจากค่า BMI โดยตรง
+function checkFoodQuantityOnly() {
+    const bmi = parseFloat(document.getElementById('quickBmi').value);
+    const foodWeight = parseFloat(document.getElementById('quickFoodWeight').value);
+    const resultBox = document.getElementById('quickResult');
+
+    if (!bmi || !foodWeight) {
+        alert("กรุณากรอกทั้งค่า BMI และปริมาณอาหารให้ครบถ้วนก่อนครับ");
+        return;
+    }
+
+    let minIdeal = 0;
+    let maxIdeal = 0;
+    let feedback = "";
+    let statusText = "";
+
+    // ประเมินตามเกณฑ์ BMI เพื่อหาค่าน้ำหนักอาหารในอุดมคติต่อมื้อ (กรัม)
+    if (bmi < 18.5) {
+        statusText = "ผอมเกินไป";
+        minIdeal = 420; maxIdeal = 500; // ควรทานเยอะหน่อยเพื่อเพิ่มกล้ามเนื้อและน้ำหนัก
+    } else if (bmi >= 18.5 && bmi < 23.0) {
+        statusText = "น้ำหนักปกติ / สุขภาพดี";
+        minIdeal = 330; maxIdeal = 400; // ปริมาณสมดุลรักษารูปร่าง
+    } else if (bmi >= 23.0 && bmi < 25.0) {
+        statusText = "น้ำหนักเกิน / ท้วม";
+        minIdeal = 280; maxIdeal = 340; // เริ่มควบคุมปริมาณอาหาร
+    } else {
+        statusText = "โรคอ้วน";
+        minIdeal = 220; maxIdeal = 290; // จำกัดปริมาณเข้มงวดเพื่อลดน้ำหนัก
+    }
+
+    // เปรียบเทียบปริมาณอาหารที่กรอกเข้ามากับเกณฑ์อุดมคติ
+    if (foodWeight < minIdeal) {
+        feedback = `⚠️ คุณรับประทาน "น้อยเกินไป" (ปริมาณมื้อนี้ขาดไปประมาณ ${minIdeal - foodWeight} กรัม) <br><span style='color:var(--primary-blue)'>💡 คำแนะนำ: ควรรับประทานเพิ่มขึ้นอีกเล็กน้อย โดยเน้นเพิ่มในส่วนของโปรตีนและผักเพื่อให้อิ่มท้องและได้สารอาหารครบถ้วนครับ</span>`;
+    } else if (foodWeight > maxIdeal) {
+        feedback = `⚠️ คุณรับประทาน "มากเกินไป" (ปริมาณมื้อนี้เกินเกณฑ์มาประมาณ ${foodWeight - maxIdeal} กรัม) <br><span style='color:var(--primary-red)'>💡 คำแนะนำ: ควรปรับลดปริมาณอาหารลงในมื้อถัดไป โดยเฉพาะการลดสัดส่วนของข้าว/แป้ง และของทอดมันลงครับ</span>`;
+    } else {
+        feedback = `✅ ปริมาณอาหาร "เหมาะสมดีมาก" อยู่ในเกณฑ์อุดมคติสำหรับร่างกายของคุณแล้วครับ ทานในระดับนี้ต่อไปได้เลย!`;
+    }
+
+    resultBox.innerHTML = `📋 ผลการวิเคราะห์ด่วน:<br>
+                           • เกณฑ์ BMI ของคุณคือ: <b>${statusText}</b><br>
+                           • ปริมาณที่เหมาะสมต่อมื้อ: <b>${minIdeal} - ${maxIdeal} กรัม</b><br>
+                           <hr style='border:1px dashed #ccc; margin:10px 0;'>
+                           ${feedback}`;
+    resultBox.style.display = 'block';
 }
 
 function calculateBMI() {
@@ -577,8 +666,6 @@ function calculateBMI() {
     });
 
     rerollAllFood();
-
-    // สลับหน้าจากหน้าที่ 2 ไปหน้าที่ 3
     changeScreen('formScreen', 'resultScreen');
 }
 

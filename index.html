@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V17</title>
+    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V18</title>
     <style>
         :root {
             --primary-blue: #2980b9;
@@ -136,8 +136,8 @@
             border-top: 2px dashed #ccc;
         }
 
-        /* ระบบสลับหน้าจอ */
-        .screen { display: none; }
+        /* --- ระบบตัดขาดหน้าจอแบบสมบูรณ์ --- */
+        .screen { display: none !important; }
         .screen.active { display: block !important; }
 
         .bmi-badge { padding: 15px; border-radius: 8px; color: white; text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
@@ -166,7 +166,6 @@
         .macro-val { font-size: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .macro-compare { font-size: 11px; margin-top: 5px; background: rgba(0,0,0,0.2); padding: 2px; border-radius: 4px; }
 
-        /* กล่องข้าว Bento */
         .bento-box { background-color: var(--dark-red); padding: 15px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); color: #333; }
         .bento-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; grid-gap: 10px; }
         .bento-cell { background-color: #FFFDF9; border-radius: 8px; padding: 12px; box-sizing: border-box; position: relative; }
@@ -277,7 +276,7 @@
         </div>
 
         <button class="btn-next" onclick="calculateBentoBMI()">คำนวณและจัดกล่องข้าว 🍱</button>
-        <button class="btn-back" onclick="changeScreen('bentoFormScreen', 'infoScreen')">⬅️ ย้อนกลับหน้าแรก</button>
+        <button class="btn-back" onclick="changeScreen('bentoFormScreen', 'infoScreen')">⬅️ กลับไปหน้าแรก</button>
     </div>
 
     <div id="quickFormScreen" class="screen">
@@ -289,11 +288,9 @@
                 <label for="quickWeight">น้ำหนัก (กก.):</label>
                 <input type="number" id="quickWeight" placeholder="เช่น 60" step="0.1">
             </div>
-            <div class="grid-2">
-                <div class="form-group" style="grid-column: span 2;">
-                    <label for="quickHeight">ส่วนสูง (ซม.):</label>
-                    <input type="number" id="quickHeight" placeholder="เช่น 165" step="0.1">
-                </div>
+            <div class="form-group">
+                <label for="quickHeight">ส่วนสูง (ซม.):</label>
+                <input type="number" id="quickHeight" placeholder="เช่น 165" step="0.1">
             </div>
         </div>
 
@@ -351,7 +348,7 @@
         </div>
 
         <button type="button" style="background-color: var(--primary-red); margin-top:10px;" onclick="processQuickAnalysis()">ประมวลผลวิเคราะห์สารอาหาร 📋</button>
-        <button class="btn-back" onclick="changeScreen('quickFormScreen', 'infoScreen')">⬅️ ย้อนกลับหน้าแรก</button>
+        <button class="btn-back" onclick="changeScreen('quickFormScreen', 'infoScreen')">⬅️ กลับไปหน้าแรก</button>
     </div>
 
     <div id="resultScreen" class="screen">
@@ -440,11 +437,12 @@
 let currentMainFoodName = ""; 
 let currentInputMethod = "grams"; 
 
+// ฟังก์ชันสลับหน้าจอ (จะทำการปิดหน้าจอเดิม และเลื่อนหน้าต่างขึ้นด้านบนทันที เพื่อจำลองการเปลี่ยนหน้าใหม่)
 function changeScreen(hideId, showId) {
     const allScreens = document.querySelectorAll('.screen');
-    allScreens.forEach(scr => { scr.style.display = 'none'; });
-    document.getElementById(showId).style.display = 'block';
-    window.scrollTo(0, 0);
+    allScreens.forEach(scr => { scr.classList.remove('active'); });
+    document.getElementById(showId).classList.add('active');
+    window.scrollTo(0, 0); // ดีดหน้าจอกลับขึ้นด้านบนสุด
 }
 
 function switchMethod(method) {
@@ -462,7 +460,6 @@ function switchMethod(method) {
     }
 }
 
-// ขยายฐานข้อมูลโภชนาการสำหรับมื้อด่วนรวมเป็น 15 เมนูยอดฮิต
 const mealDatabase = {
     "ข้าวมันไก่ต้ม": { carb: 140, protein: 110, veggie: 10 },
     "ข้าวผัดกะเพราหมูสับไข่ดาว": { carb: 135, protein: 120, veggie: 15 },
@@ -481,7 +478,6 @@ const mealDatabase = {
     "โจ๊กหมูใส่ไข่": { carb: 95, protein: 75, veggie: 10 }
 };
 
-// ขยายคลังอาหารสำหรับสุ่มจัดกล่องข้าว Bento (บริการที่ 1) ให้มีตัวเลือกเยอะและหลากหลายขึ้น
 const bentoFoodPool = {
     main: [
         { name: "ข้าวกล้อง + อกไก่ย่างเกลือสุพรีม", tags: [] },
@@ -519,7 +515,6 @@ const bentoFoodPool = {
 let currentWeights = {};
 let activeAllergies = [];
 
-// ฟังก์ชันวิเคราะห์มื้อด่วน
 function processQuickAnalysis() {
     const weight = parseFloat(document.getElementById('quickWeight').value);
     const heightCm = parseFloat(document.getElementById('quickHeight').value);
@@ -604,7 +599,6 @@ function processQuickAnalysis() {
     changeScreen('quickFormScreen', 'foodResultScreen');
 }
 
-// ฟังก์ชันจัดเซ็ตกล่องข้าว Bento (บริการที่ 1)
 function calculateBentoBMI() {
     const weight = parseFloat(document.getElementById('weight').value);
     const heightCm = parseFloat(document.getElementById('height').value);
@@ -618,7 +612,6 @@ function calculateBentoBMI() {
     else if (bmi >= 23.0 && bmi < 25.0) { status = "น้ำหนักเกิน / ท้วม"; color = "#e67e22"; currentWeights = { main: "คาร์บ 90g + เนื้อ 120g", side: "โปรตีน 50g", veggie: "ผัก 150g", snack: "50g" }; todo = ["คุมสัดส่วนของทอด แกงกะทิ และของหวาน", "เน้นออกกำลังกายแบบคาร์ดิโอสม่ำเสมอ"]; } 
     else { status = "ภาวะโรคอ้วน"; color = "#e74c3c"; currentWeights = { main: "คาร์บ 60g + เนื้อ 130g", side: "โปรตีน 50g", veggie: "ผัก 180g", snack: "50g" }; todo = ["งดน้ำหวานและน้ำอัดลมเด็ดขาด", "เน้นเดินเร็วหรือปั่นจักรยานเพื่อเซฟข้อเข่า"]; }
 
-    // ดึงข้อมูลการแพ้อาหารมาคัดกรอง
     activeAllergies = []; 
     document.querySelectorAll('.allergy-check:checked').forEach(chk => { activeAllergies.push(chk.value); });
     
@@ -634,7 +627,6 @@ function calculateBentoBMI() {
 }
 
 function refreshSingleCell(category) {
-    // กรองเมนูอาหารตามประวัติการแพ้ของผู้ใช้งาน
     const filtered = bentoFoodPool[category].filter(item => !item.tags.some(tag => activeAllergies.includes(tag)));
     const finalPool = filtered.length > 0 ? filtered : [bentoFoodPool[category][0]];
     const newFood = finalPool[Math.floor(Math.random() * finalPool.length)].name;

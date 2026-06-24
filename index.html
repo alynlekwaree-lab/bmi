@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V9</title>
+    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V10</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -87,6 +87,14 @@
         .btn-reset-all:hover {
             background-color: #d35400;
         }
+        /* ดีไซน์ปุ่มค้นหาแผนที่ */
+        .btn-maps {
+            background-color: #3498db;
+            margin-top: 15px;
+        }
+        .btn-maps:hover {
+            background-color: #2980b9;
+        }
         .btn-back {
             background-color: #7f8c8d;
             margin-top: 15px;
@@ -94,11 +102,9 @@
         .btn-back:hover {
             background-color: #95a5a6;
         }
-        /* ซ่อนหน้าจอเริ่มต้น */
         .screen {
             display: none;
         }
-        /* แสดงหน้าจอที่เปิดอยู่ */
         .screen.active {
             display: block;
         }
@@ -120,7 +126,6 @@
             font-weight: bold;
             margin-bottom: 20px;
         }
-        /* ดีไซน์กล่องข้าว Bento Box */
         .bento-box {
             background-color: #4A3E3D;
             padding: 15px;
@@ -313,6 +318,9 @@
         </div>
 
         <button class="btn-reset-all" onclick="rerollAllFood()">🔄 สุ่มเปลี่ยนอาหารใหม่หมดทุกช่อง</button>
+        
+        <!-- ปุ่มฟีเจอร์เพิ่มพิกัดร้านอาหารใกล้ฉัน -->
+        <button class="btn-maps" onclick="findNearbyHealthyFood()">📍 ค้นหาร้านอาหารสุขภาพใกล้ฉันบน Google Maps</button>
 
         <div class="todo-section">
             <h3>🏃‍♂️ สิ่งที่ควรทำ (Action Plan)</h3>
@@ -428,7 +436,6 @@ function calculateBMI() {
     const checks = document.querySelectorAll('.allergy-check:checked');
     checks.forEach(chk => { activeAllergies.push(chk.value); });
 
-    // ดักจับ Keyword โรค
     diseases.diabetes = diseaseText.includes("เบาหวาน");
     diseases.hypertension = diseaseText.includes("ความดัน");
     diseases.heart = diseaseText.includes("หัวใจ");
@@ -458,7 +465,6 @@ function calculateBMI() {
 
     rerollAllFood();
 
-    // สลับหน้าจอซ่อนแบบฟอร์ม -> แสดงผลลัพธ์
     document.getElementById('formScreen').classList.remove('active');
     document.getElementById('resultScreen').classList.add('active');
 }
@@ -569,10 +575,34 @@ function rerollAllFood() {
     refreshSingleCell('snack');
 }
 
-// ฟังก์ชันสำหรับกดปุ่มย้อนกลับไปหน้าแรก
 function goBackToForm() {
     document.getElementById('resultScreen').classList.remove('active');
     document.getElementById('formScreen').classList.add('active');
+}
+
+// ฟังก์ชันดึงพิกัดปัจจุบันและลิงก์เปิด Google Maps เพื่อค้นหาร้านอาหารสุขภาพใกล้ตัว
+function findNearbyHealthyFood() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                // ใช้คำค้นหาเจาะจงอาหารคลีน อาหารสุขภาพ
+                const mapUrl = `https://www.google.com/maps/search/อาหารคลีน+อาหารสุขภาพ/@${lat},${lng},14z`;
+                window.open(mapUrl, '_blank');
+            },
+            function(error) {
+                // หากผู้ใช้ไม่ได้เปิดสิทธิ์ GPS หรือบล็อกไว้ ให้ใช้คำค้นหาทั่วไปตามพื้นที่ใกล้เคียงแทน
+                alert("ระบบไม่สามารถระบุพิกัดอัตโนมัติได้ (เนื่องจากไม่ได้เปิดสิทธิ์เข้าถึงโลเคชั่น) จะเปิดหน้าค้นหาทั่วไปให้แทนครับ");
+                const defaultUrl = `https://www.google.com/maps/search/อาหารคลีน+อาหารสุขภาพ+ใกล้ฉัน`;
+                window.open(defaultUrl, '_blank');
+            }
+        );
+    } else {
+        // เบราว์เซอร์ไม่รองรับ Geolocation
+        const defaultUrl = `https://www.google.com/maps/search/อาหารคลีน+อาหารสุขภาพ+ใกล้ฉัน`;
+        window.open(defaultUrl, '_blank');
+    }
 }
 </script>
 

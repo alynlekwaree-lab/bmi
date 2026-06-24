@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V10</title>
+    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V11</title>
     <style>
+        :root {
+            --primary-blue: #2980b9;
+            --dark-blue: #1f4068;
+            --primary-red: #e74c3c;
+            --dark-red: #c0392b;
+            --bg-light: #f4f7f6;
+            --text-main: #333;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-light);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
             display: flex;
@@ -22,10 +31,14 @@
             max-width: 580px;
             width: 100%;
         }
-        h1, h2 {
+        h1, h2, h3 {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 25px;
+            color: var(--dark-blue);
+            margin-bottom: 20px;
+        }
+        h1 {
+            border-bottom: 3px solid var(--primary-red);
+            padding-bottom: 10px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -34,6 +47,7 @@
             display: block;
             font-weight: bold;
             margin-bottom: 5px;
+            color: var(--dark-blue);
         }
         input[type="number"], input[type="text"] {
             width: 100%;
@@ -64,12 +78,14 @@
             font-weight: normal;
             cursor: pointer;
         }
+        
+        /* ปุ่มสไตล์ธีม ฟ้า-แดง */
         button {
             width: 100%;
-            background-color: #2ecc71;
+            background-color: var(--primary-blue);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 14px;
             border-radius: 5px;
             font-size: 16px;
             font-weight: bold;
@@ -78,7 +94,13 @@
             transition: 0.3s;
         }
         button:hover {
-            background-color: #27ae60;
+            background-color: var(--dark-blue);
+        }
+        .btn-next {
+            background-color: var(--primary-red);
+        }
+        .btn-next:hover {
+            background-color: var(--dark-red);
         }
         .btn-reset-all {
             background-color: #e67e22;
@@ -87,13 +109,12 @@
         .btn-reset-all:hover {
             background-color: #d35400;
         }
-        /* ดีไซน์ปุ่มค้นหาแผนที่ */
         .btn-maps {
-            background-color: #3498db;
+            background-color: var(--primary-blue);
             margin-top: 15px;
         }
         .btn-maps:hover {
-            background-color: #2980b9;
+            background-color: var(--dark-blue);
         }
         .btn-back {
             background-color: #7f8c8d;
@@ -102,12 +123,42 @@
         .btn-back:hover {
             background-color: #95a5a6;
         }
+
+        /* ตารางและข้อมูลในหน้าแรก */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .info-table th, .info-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .info-table th {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        .info-card {
+            background-color: #eef5f9;
+            border-left: 5px solid var(--primary-blue);
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* การควบคุมหน้าจอ */
         .screen {
             display: none;
         }
         .screen.active {
             display: block;
         }
+
+        /* การแสดงผลลัพธ์ */
         .bmi-badge {
             padding: 15px;
             border-radius: 8px;
@@ -118,7 +169,7 @@
             margin-bottom: 15px;
         }
         .calorie-badge {
-            background-color: #34495e;
+            background-color: var(--dark-blue);
             color: white;
             padding: 10px;
             border-radius: 8px;
@@ -126,8 +177,10 @@
             font-weight: bold;
             margin-bottom: 20px;
         }
+
+        /* ดีไซน์กล่องข้าว Bento Box คุมโทนแดงตัดช่องอาหารขาว */
         .bento-box {
-            background-color: #4A3E3D;
+            background-color: var(--dark-red);
             padding: 15px;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -146,60 +199,66 @@
             position: relative;
         }
         .bento-main {
-            border: 3px solid #D9534F;
-            min-height: 140px;
+            border: 3px solid var(--primary-red);
+            min-height: 150px;
         }
         .bento-side-container {
             display: grid;
             grid-template-rows: 1fr 1fr;
             grid-gap: 10px;
         }
-        .bento-side1 { border: 3px solid #F0AD4E; }
-        .bento-side2 { border: 3px solid #5CB85C; }
+        .bento-side1 { border: 3px solid #f39c12; }
+        .bento-side2 { border: 3px solid #27ae60; }
         .bento-snack {
-            border: 3px solid #5BC0DE;
+            border: 3px solid var(--primary-blue);
             margin-top: 10px;
+            min-height: 90px;
         }
         .badge {
             display: inline-block;
             color: white;
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             margin-bottom: 5px;
         }
+        
+        /* ขยายปุ่มรีเซ็ตอาหารในแต่ละช่องให้ใหญ่และเด่นชัดตามคำขอ */
         .btn-inline-refresh {
             position: absolute;
-            top: 8px;
+            bottom: 8px;
             right: 8px;
             background-color: #e67e22;
             color: white;
             border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            font-size: 11px;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 0;
             margin: 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: 0.2s;
         }
         .btn-inline-refresh:hover {
             background-color: #d35400;
+            transform: scale(1.05);
         }
+        
         .food-text {
             font-weight: bold;
             font-size: 14px;
             margin: 5px 0;
-            padding-right: 20px;
+            padding-right: 40px; /* เว้นที่กันชนไม่ให้ซ้อนทับปุ่มรีเซ็ตที่ใหญ่ขึ้น */
         }
         .weight-text {
             font-size: 12px;
-            color: #e74c3c;
+            color: var(--primary-red);
             margin: 0 0 4px 0;
             font-style: italic;
             font-weight: bold;
@@ -214,6 +273,7 @@
             font-weight: bold;
             display: block;
             border-left: 3px solid #d32f2f;
+            padding-right: 40px;
         }
         .todo-section {
             margin-top: 20px;
@@ -230,9 +290,57 @@
 
 <div class="container">
     
-    <!-- หน้าที่ 1: หน้ากรอกข้อมูลข้อมูลตนเอง -->
-    <div id="formScreen" class="screen active">
-        <h1>🍱 กรอกข้อมูลสุขภาพของคุณ</h1>
+    <div id="infoScreen" class="screen active">
+        <h1>📊 BMI คืออะไร?</h1>
+        <p style="line-height: 1.6; text-indent: 20px;">
+            <b>BMI (Body Mass Index)</b> หรือ ดัชนีมวลกาย คือ ค่ามาตรวัดสากลที่ใช้ประเมินความสมดุลระหว่าง <b>"น้ำหนักตัว"</b> และ <b>"ส่วนสูง"</b> เพื่อเช็คว่าปัจจุบันเราอยู่ในเกณฑ์ที่ผอมเกินไป สุขภาพดี หรือเริ่มเข้าสู่ภาวะอ้วน ซึ่งส่งผลต่อความเสี่ยงในการเกิดโรคเรื้อรังต่าง ๆ
+        </p>
+
+        <h3>📋 ตารางเกณฑ์มาตรฐาน BMI</h3>
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>ค่า BMI</th>
+                    <th>เกณฑ์ที่ได้</th>
+                    <th>ความเสี่ยงต่อสุขภาพ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>น้อยกว่า 18.5</td>
+                    <td style="color:#f1c40f; font-weight:bold;">น้ำหนักน้อย / ผอม</td>
+                    <td>เสี่ยงขาดสารอาหาร ภูมิคุ้มกันต่ำ</td>
+                </tr>
+                <tr>
+                    <td>18.5 - 22.9</td>
+                    <td style="color:#27ae60; font-weight:bold;">น้ำหนักปกติ / สุขภาพดี</td>
+                    <td>เท่าคนปกติ ความเสี่ยงโรคต่ำที่สุด</td>
+                </tr>
+                <tr>
+                    <td>23.0 - 24.9</td>
+                    <td style="color:#e67e22; font-weight:bold;">น้ำหนักเกิน / ท้วม</td>
+                    <td>เริ่มเสี่ยงต่อโรคความดันและเบาหวาน</td>
+                </tr>
+                <tr>
+                    <td>25.0 ขึ้นไป</td>
+                    <td style="color:#e74c3c; font-weight:bold;">โรคอ้วน</td>
+                    <td>เสี่ยงสูงต่อโรคหัวใจ หลอดเลือด และข้อเข่า</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>🏃‍♂️ ข้อควรปฏิบัติเมื่อรู้ค่า BMI</h3>
+        <div class="info-card">
+            <b>• กลุ่มที่ผอม:</b> ควรเน้นรับประทานโปรตีนและคาร์โบไฮเดรตเชิงซ้อนเพิ่มขึ้น พร้อมออกกำลังกายแบบเวทเทรนนิ่งเพื่อสร้างมวลกล้ามเนื้อ<br><br>
+            <b>• กลุ่มที่สมส่วน:</b> รักษาพฤติกรรมเดิมไว้ ทานอาหารหลากหลายครบ 5 หมู่ และออกกำลังกายสม่ำเสมอสัปดาห์ละ 150 นาที<br><br>
+            <b>• กลุ่มที่ท้วม/อ้วน:</b> ควรเริ่มจำกัดแคลอรี ลดอาหารประเภทของทอด ของมัน แป้งขัดสี น้ำหวาน และเน้นการออกกำลังกายแบบคาร์ดิโอร่วมด้วย
+        </div>
+
+        <button class="btn-next" onclick="changeScreen('infoScreen', 'formScreen')">ถัดไป: กรอกข้อมูลสุขภาพ ➡️</button>
+    </div>
+
+    <div id="formScreen" class="screen">
+        <h2>📝 กรอกข้อมูลสุขภาพของคุณ</h2>
         
         <div class="form-group">
             <label>เพศ</label>
@@ -253,7 +361,7 @@
         </div>
 
         <div class="form-group">
-            <label for="diseaseInput">โรคประจำตัว (พิมพ์ระบุได้ เช่น เบาหวาน, เกาต์, กรดไหลย้อน)</label>
+            <label for="diseaseInput">โรคประจำตัว (พิมพ์ระบุ เช่น เบาหวาน, เกาต์, กรดไหลย้อน)</label>
             <input type="text" id="diseaseInput" placeholder="ตัวอย่าง: เบาหวาน, ความดัน, โรคหัวใจ, โรคไต (เว้นว่างได้)">
         </div>
 
@@ -271,63 +379,61 @@
             </div>
         </div>
 
-        <button onclick="calculateBMI()">ตรวจสอบและจัดกล่องข้าว</button>
+        <button class="btn-next" onclick="calculateBMI()">คำนวณและจัดกล่องข้าว 🍱</button>
+        <button class="btn-back" onclick="changeScreen('formScreen', 'infoScreen')">⬅️ ย้อนกลับไปหน้าแรก</button>
     </div>
 
-    <!-- หน้าที่ 2: หน้าแสดงผลลัพธ์ข้อมูลต่างๆ -->
     <div id="resultScreen" class="screen">
-        <h2>📊 ผลการประมวลผลสุขภาพ</h2>
+        <h2>📊 ผลการวิเคราะห์กล่องข้าวสุขภาพ</h2>
         
         <div id="bmiBadge" class="bmi-badge"></div>
         <div id="calorieBadge" class="calorie-badge"></div>
         
-        <h3>🍱 กล่องข้าวดีไซน์สุขภาพของคุณ <small style="font-size:12px; font-weight:normal; color:#666;">(กด 🔄 เพื่อเปลี่ยนเมนูได้)</small></h3>
+        <h3>🍱 กล่องข้าว Bento ของคุณ <small style="font-size:12px; font-weight:normal; color:#666;">(กดปุ่ม 🔄 ส้มขนาดใหญ่เพื่อเปลี่ยนเมนูช่องนั้น)</small></h3>
         <div class="bento-box">
             <div class="bento-grid">
                 <div class="bento-cell bento-main">
-                    <span class="badge" style="background-color: #D9534F;">อาหารจานหลัก</span>
-                    <button class="btn-inline-refresh" onclick="refreshSingleCell('main')" title="เปลี่ยนเมนูจานหลัก">🔄</button>
+                    <span class="badge" style="background-color: var(--primary-red);">อาหารจานหลัก</span>
                     <p class="food-text" id="menuMain"></p>
                     <p class="weight-text" id="weightMain"></p>
                     <div id="warnMain" class="disease-warning" style="display:none;"></div>
+                    <button class="btn-inline-refresh" onclick="refreshSingleCell('main')" title="เปลี่ยนเมนูจานหลัก">🔄</button>
                 </div>
                 <div class="bento-side-container">
                     <div class="bento-cell bento-side1">
-                        <span class="badge" style="background-color: #F0AD4E;">เครื่องเคียง 1</span>
-                        <button class="btn-inline-refresh" onclick="refreshSingleCell('side')" title="เปลี่ยนเครื่องเคียง">🔄</button>
+                        <span class="badge" style="background-color: #f39c12;">เครื่องเคียง</span>
                         <p class="food-text" id="menuSide1"></p>
                         <p class="weight-text" id="weightSide1"></p>
                         <div id="warnSide1" class="disease-warning" style="display:none;"></div>
+                        <button class="btn-inline-refresh" onclick="refreshSingleCell('side')" title="เปลี่ยนเครื่องเคียง">🔄</button>
                     </div>
                     <div class="bento-cell bento-side2">
-                        <span class="badge" style="background-color: #5CB85C;">ผัก/วิตามิน</span>
-                        <button class="btn-inline-refresh" onclick="refreshSingleCell('veggie')" title="เปลี่ยนเมนูผัก">🔄</button>
+                        <span class="badge" style="background-color: #27ae60;">ผัก/วิตามิน</span>
                         <p class="food-text" id="menuSide2"></p>
                         <p class="weight-text" id="weightSide2"></p>
                         <div id="warnSide2" class="disease-warning" style="display:none;"></div>
+                        <button class="btn-inline-refresh" onclick="refreshSingleCell('veggie')" title="เปลี่ยนเมนูผัก">🔄</button>
                     </div>
                 </div>
             </div>
             <div class="bento-cell bento-snack">
-                <span class="badge" style="background-color: #5BC0DE;">ของว่าง / ผลไม้</span>
-                <button class="btn-inline-refresh" onclick="refreshSingleCell('snack')" title="เปลี่ยนของว่าง/ผลไม้">🔄</button>
+                <span class="badge" style="background-color: var(--primary-blue);">ของว่าง / ผลไม้</span>
                 <p class="food-text" id="menuSnack"></p>
                 <p class="weight-text" id="weightSnack"></p>
                 <div id="warnSnack" class="disease-warning" style="display:none;"></div>
+                <button class="btn-inline-refresh" onclick="refreshSingleCell('snack')" title="เปลี่ยนของว่าง/ผลไม้">🔄</button>
             </div>
         </div>
 
-        <button class="btn-reset-all" onclick="rerollAllFood()">🔄 สุ่มเปลี่ยนอาหารใหม่หมดทุกช่อง</button>
-        
-        <!-- ปุ่มฟีเจอร์เพิ่มพิกัดร้านอาหารใกล้ฉัน -->
+        <button class="btn-reset-all" onclick="rerollAllFood()">🔄 สุ่มเปลี่ยนอาหารใหม่ทั้งหมด</button>
         <button class="btn-maps" onclick="findNearbyHealthyFood()">📍 ค้นหาร้านอาหารสุขภาพใกล้ฉันบน Google Maps</button>
 
         <div class="todo-section">
-            <h3>🏃‍♂️ สิ่งที่ควรทำ (Action Plan)</h3>
+            <h3>🏃‍♂️ สิ่งที่ควรทำเพิ่มเติม (Action Plan)</h3>
             <ul id="todoList"></ul>
         </div>
 
-        <button class="btn-back" onclick="goBackToForm()">⬅️ ย้อนกลับไปแก้ไขข้อมูล</button>
+        <button class="btn-back" onclick="changeScreen('resultScreen', 'formScreen')">⬅️ ย้อนกลับไปแก้ไขข้อมูล</button>
     </div>
 
 </div>
@@ -392,6 +498,13 @@ let diseases = {
     gastritis: false, foodallergy: false, ibd: false, thalassemia: false
 };
 
+// ฟังก์ชันสลับหน้าจอทั่วไป
+function changeScreen(hideId, showId) {
+    document.getElementById(hideId).classList.remove('active');
+    document.getElementById(showId).classList.add('active');
+    window.scrollTo(0, 0);
+}
+
 function calculateBMI() {
     const weight = parseFloat(document.getElementById('weight').value);
     const heightCm = parseFloat(document.getElementById('height').value);
@@ -399,7 +512,7 @@ function calculateBMI() {
     const diseaseText = document.getElementById('diseaseInput').value.trim();
     
     if (!weight || !heightCm) {
-        alert("กรุณากรอกข้อมูลให้ครบถ้วนครับ");
+        alert("กรุณากรอกข้อมูลน้ำหนักและส่วนสูงด้วยครับ");
         return;
     }
 
@@ -413,21 +526,21 @@ function calculateBMI() {
     let dailyCalorie = weight * bmrFactor;
 
     if (bmi < 18.5) {
-        status = "น้ำหนักน้อยกว่ามาตรฐาน (ผอม)"; color = "#FFC107"; dailyCalorie += 350; 
+        status = "น้ำหนักน้อยกว่ามาตรฐาน (ผอม)"; color = "#f1c40f"; dailyCalorie += 350; 
         currentWeights = { main: "คาร์บ 160g + เนื้อสัตว์ 130g", side: "โปรตีนเสริม 80g", veggie: "ผักต่างๆ 100g", snack: "ปริมาณ 80g" };
-        todo = ["เน้นเวทเทรนนิ่งสร้างกล้ามเนื้อ", "แบ่งทานอาหารเป็นมื้อย่อยวันละ 5-6 มื้อ"];
+        todo = ["เน้นออกกำลังกายสร้างกล้ามเนื้อ (Weight Training)", "กินอาหารที่มีความหนาแน่นสารอาหารสูง แบ่งทานเป็นมื้อย่อยๆ"];
     } else if (bmi >= 18.5 && bmi < 23.0) {
-        status = "น้ำหนักปกติ (สุขภาพดี)"; color = "#28A745";
+        status = "น้ำหนักปกติ (สุขภาพดี)"; color = "#27ae60";
         currentWeights = { main: "คาร์บ 130g + เนื้อสัตว์ 120g", side: "โปรตีนเสริม 60g", veggie: "ผักต่างๆ 100g", snack: "ปริมาณ 70g" };
-        todo = ["รักษามาตรฐานนี้ไว้ ออกกำลังกายให้สม่ำเสมอ", "เน้นกินอาหารหลากหลายให้ครบ 5 หมู่"];
+        todo = ["รักษาพฤติกรรมนี้ไว้ ทานอาหารให้หลากหลายครบ 5 หมู่", "ออกกำลังกายแบบคาร์ดิโอสลับเวทสม่ำเสมอ"];
     } else if (bmi >= 23.0 && bmi < 25.0) {
-        status = "น้ำหนักเกิน (ท้วม)"; color = "#FD7E14"; dailyCalorie -= 250; 
+        status = "น้ำหนักเกิน (ท้วม)"; color = "#e67e22"; dailyCalorie -= 250; 
         currentWeights = { main: "คาร์บน้อย 90g + เนื้อสัตว์ลีน 120g", side: "โปรตีนลีน 50g", veggie: "ผักเน้นๆ 150g", snack: "ปริมาณ 50g" };
-        todo = ["ลดของทอด ของมัน แป้งขัดสี และขนมหวาน", "คาร์ดิโออย่างน้อย 30-45 นาทีต่อวัน"];
+        todo = ["ปรับลดสัดส่วนของทอด ของมัน แป้งขัดสี และน้ำตาลลง", "คาร์ดิโออย่างน้อย 30-45 นาทีต่อวันเพื่อเร่งเผาผลาญ"];
     } else {
-        status = "โรคอ้วน (ควรควบคุมน้ำหนัก)"; color = "#DC3545"; dailyCalorie -= 500; 
+        status = "โรคอ้วน (ควรควบคุมน้ำหนัก)"; color = "#e74c3c"; dailyCalorie -= 500; 
         currentWeights = { main: "คาร์บต่ำมาก 60g + เนื้อสัตว์ลีน 130g", side: "โปรตีนลีน 50g", veggie: "ผักเน้นๆ 180g", snack: "ปริมาณ 50g" };
-        todo = ["งดน้ำหวาน น้ำอัดลม และของหวานเด็ดขาด", "เน้นออกกำลังกายประเภทลดแรงกระแทกเพื่อเซฟข้อ"];
+        todo = ["งดของหวาน ขนมจุกจิก และน้ำอัดลมอย่างเด็ดขาด", "เน้นออกกำลังกายแรงกระแทกต่ำ เช่น เดินเร็ว ว่ายน้ำ ป้องกันเจ็บข้อเข่า"];
     }
 
     currentCalorie = Math.round(dailyCalorie / 3);
@@ -452,7 +565,7 @@ function calculateBMI() {
     handleDiseaseModifications(todo);
 
     document.getElementById('bmiBadge').style.backgroundColor = color;
-    document.getElementById('bmiBadge').innerHTML = `เพศ: ${gender} | ค่า BMI: ${bmi.toFixed(2)}<br><small>เกณฑ์: ${status}</small>`;
+    document.getElementById('bmiBadge').innerHTML = `เพศ: ${gender} | ค่า BMI: ${bmi.toFixed(2)}<br><small>เกณฑ์ของคุณคือ: ${status}</small>`;
     document.getElementById('calorieBadge').innerHTML = `🎯 พลังงานที่แนะนำในกล่องข้าวมื้อนี้: <b>${currentCalorie} kcal</b>`;
     
     const todoList = document.getElementById('todoList');
@@ -465,8 +578,8 @@ function calculateBMI() {
 
     rerollAllFood();
 
-    document.getElementById('formScreen').classList.remove('active');
-    document.getElementById('resultScreen').classList.add('active');
+    // สลับหน้าจากหน้าที่ 2 ไปหน้าที่ 3
+    changeScreen('formScreen', 'resultScreen');
 }
 
 function handleDiseaseModifications(todo) {
@@ -575,31 +688,22 @@ function rerollAllFood() {
     refreshSingleCell('snack');
 }
 
-function goBackToForm() {
-    document.getElementById('resultScreen').classList.remove('active');
-    document.getElementById('formScreen').classList.add('active');
-}
-
-// ฟังก์ชันดึงพิกัดปัจจุบันและลิงก์เปิด Google Maps เพื่อค้นหาร้านอาหารสุขภาพใกล้ตัว
 function findNearbyHealthyFood() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             function(position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
-                // ใช้คำค้นหาเจาะจงอาหารคลีน อาหารสุขภาพ
                 const mapUrl = `https://www.google.com/maps/search/อาหารคลีน+อาหารสุขภาพ/@${lat},${lng},14z`;
                 window.open(mapUrl, '_blank');
             },
             function(error) {
-                // หากผู้ใช้ไม่ได้เปิดสิทธิ์ GPS หรือบล็อกไว้ ให้ใช้คำค้นหาทั่วไปตามพื้นที่ใกล้เคียงแทน
-                alert("ระบบไม่สามารถระบุพิกัดอัตโนมัติได้ (เนื่องจากไม่ได้เปิดสิทธิ์เข้าถึงโลเคชั่น) จะเปิดหน้าค้นหาทั่วไปให้แทนครับ");
+                alert("ระบบไม่สามารถระบุพิกัดอัตโนมัติได้ จะเปิดหน้าค้นหาทั่วไปให้แทนครับ");
                 const defaultUrl = `https://www.google.com/maps/search/อาหารคลีน+อาหารสุขภาพ+ใกล้ฉัน`;
                 window.open(defaultUrl, '_blank');
             }
         );
     } else {
-        // เบราว์เซอร์ไม่รองรับ Geolocation
         const defaultUrl = `https://www.google.com/maps/search/อาหารคลีน+อาหารสุขภาพ+ใกล้ฉัน`;
         window.open(defaultUrl, '_blank');
     }

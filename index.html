@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V21</title>
+    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V22</title>
     <style>
         :root {
             --primary-blue: #2980b9;
@@ -136,6 +136,49 @@
             border-top: 2px dashed #ccc;
         }
 
+        /* --- สไตล์ส่วนข้อมูลผู้จัดทำหน้าแรก --- */
+        .creator-section {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+        }
+        .creator-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .creator-logo {
+            width: 35px;
+            height: auto;
+            object-fit: contain;
+        }
+        .creator-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--dark-blue);
+            margin: 0;
+        }
+        .creator-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            font-size: 13.5px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        .advisor-text {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #cbd5e1;
+            font-weight: bold;
+            color: #2c5282;
+        }
+
         /* --- ระบบตัดขาดหน้าจอแบบสมบูรณ์ --- */
         .screen { display: none !important; }
         .screen.active { display: block !important; }
@@ -239,6 +282,21 @@
             <h3>⚡ กรุณาเลือกบริการที่ต้องการ</h3>
             <button class="btn-next" onclick="changeScreen('infoScreen', 'bentoFormScreen')">🍱 1. คำนวณ BMI และจัดเซ็ตกล่องข้าวสุขภาพ</button>
             <button type="button" style="background-color: var(--primary-blue); margin-top:15px;" onclick="changeScreen('infoScreen', 'quickFormScreen')">📋 2. ตรวจสอบปริมาณสารอาหารมื้อนี้ (ด่วน)</button>
+        </div>
+
+        <!-- โซนคณะผู้จัดทำและครูที่ปรึกษาพร้อมโลโก้ขนาบข้าง -->
+        <div class="creator-section">
+            <div class="creator-header">
+                <img src="IMG_8001.png" alt="Logo" class="creator-logo">
+                <p class="creator-title">คณะผู้จัดทำ</p>
+                <img src="IMG_8001.png" alt="Logo" class="creator-logo">
+            </div>
+            <ul class="creator-list">
+                <li>ด.ช.ซาคิร ทองมาก — โรงเรียนหาดใหญ่วิทยาลัย</li>
+                <li>ด.ญ.กนกนภัส สมาคม — โรงเรียนหาดใหญ่วิทยาลัย</li>
+                <li>ด.ญ.อลิน เล็กวารี — โรงเรียนหาดใหญ่วิทยาลัย</li>
+                <li class="advisor-text">ครูที่ปรึกษา: นายปนนท์ สิทธิสาร — โรงเรียนหาดใหญ่วิทยาลัย</li>
+            </ul>
         </div>
     </div>
 
@@ -485,7 +543,6 @@ const mealDatabase = {
     "โจ๊กหมูใส่ไข่": { carb: 95, protein: 75, veggie: 10 }
 };
 
-// ขยายหมวดหมู่ main (อาหารจานหลัก) ให้มีความหลากหลายและเมนูอุดมสมบูรณ์ขึ้น
 const bentoFoodPool = {
     main: [
         { name: "ข้าวกล้อง + อกไก่ย่างเกลือสุพรีม", tags: [] },
@@ -503,9 +560,8 @@ const bentoFoodPool = {
         { name: "เส้นบุกผัดไทย + เต้าหู้ขาวและกุ้งแห้ง", tags: ["seafood", "nut", "egg"] },
         { name: "ข้าวกล้อง + ฉู่ฉี่ปลาทูสดไร้น้ำมัน", tags: ["seafood"] },
         { name: "ข้าวไรซ์เบอร์รี่ + เนื้อวัวสไลด์ผัดซอสหัวหอม", tags: [] },
-        // --- เมนูอาหารจานหลักที่เพิ่มเข้ามาใหม่ ---
         { name: "ข้าวกล้อง + ลาบทูน่าสลัดคลีนใบบัวบก", tags: ["seafood"] },
-        { name: "ข้าวไรซ์เบอร์รี่ + อกไก่ย่างถ่านสไตล์ยากิโทริ", tags: ["wheat"] }, // ซอสญี่ปุ่นมักมีแป้งสาลี
+        { name: "ข้าวไรซ์เบอร์รี่ + อกไก่ย่างถ่านสไตล์ยากิโทริ", tags: ["wheat"] }, 
         { name: "สเต็กปลากะพงย่างซอสพริกไทยดำ + มันบดลีน", tags: ["seafood", "milk"] },
         { name: "ข้าวกล้อง + แกงส้มกุ้งสดใส่ผักรวม (ไม่ใส่ผงชูรส)", tags: ["seafood"] },
         { name: "ข้าวไรซ์เบอร์รี่ + ไก่สับผัดขิงอ่อนใส่เห็ดหูหนู", tags: [] },
@@ -616,7 +672,7 @@ function processQuickAnalysis() {
     document.getElementById('veggieTarget').innerText = `เป้าหมาย: ${targetVeggie}g`;
 
     let feedback = `<b>🔍 แจกแจงโภชนาการสำหรับเมนู [${foodLabelName}]:</b><br>`;
-    if (uCarb > targetCarb + 20) feedback += `• 🍚 คาร์โบไฮเดรต: ค่อนข้างเยอะไปนิด มื้อต่อไปลองลดแป้งหรือขยับไปเน้นข้าวกล้องดูครับ<br>`;
+    if (uCarb > targetCarb + 20) feedback += `• 🍚 คาร์โบไฮเดต: ค่อนข้างเยอะไปนิด มื้อต่อไปลองลดแป้งหรือขยับไปเน้นข้าวกล้องดูครับ<br>`;
     else if (uCarb < targetCarb - 20) feedback += `• 🍚 คาร์โบไฮเดรต: น้อยกว่าเกณฑ์ ร่างกายอาจโหยแป้งภายหลังได้<br>`;
     else feedback += `• 🍚 คาร์โบไฮเดรต: สัดส่วนดีเหมาะสม<br>`;
 

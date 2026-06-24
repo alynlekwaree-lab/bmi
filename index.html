@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V4</title>
+    <title>โปรแกรมคำนวณ BMI & กล่องข้าวสุขภาพ V9</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,7 +22,7 @@
             max-width: 580px;
             width: 100%;
         }
-        h1 {
+        h1, h2 {
             text-align: center;
             color: #2c3e50;
             margin-bottom: 25px;
@@ -35,12 +35,16 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
-        input[type="number"] {
+        input[type="number"], input[type="text"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
+        }
+        input[type="text"]::placeholder {
+            color: #aaa;
+            font-size: 13px;
         }
         .radio-group {
             display: flex;
@@ -76,18 +80,27 @@
         button:hover {
             background-color: #27ae60;
         }
-        .btn-reset {
+        .btn-reset-all {
             background-color: #e67e22;
             margin-top: 15px;
         }
-        .btn-reset:hover {
+        .btn-reset-all:hover {
             background-color: #d35400;
         }
-        .result-box {
+        .btn-back {
+            background-color: #7f8c8d;
+            margin-top: 15px;
+        }
+        .btn-back:hover {
+            background-color: #95a5a6;
+        }
+        /* ซ่อนหน้าจอเริ่มต้น */
+        .screen {
             display: none;
-            margin-top: 25px;
-            border-top: 2px dashed #ccc;
-            padding-top: 20px;
+        }
+        /* แสดงหน้าจอที่เปิดอยู่ */
+        .screen.active {
+            display: block;
         }
         .bmi-badge {
             padding: 15px;
@@ -125,6 +138,7 @@
             border-radius: 8px;
             padding: 12px;
             box-sizing: border-box;
+            position: relative;
         }
         .bento-main {
             border: 3px solid #D9534F;
@@ -150,17 +164,51 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
+        .btn-inline-refresh {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .btn-inline-refresh:hover {
+            background-color: #d35400;
+        }
         .food-text {
             font-weight: bold;
             font-size: 14px;
-            margin: 0 0 5px 0;
+            margin: 5px 0;
+            padding-right: 20px;
         }
         .weight-text {
             font-size: 12px;
             color: #e74c3c;
-            margin: 0;
+            margin: 0 0 4px 0;
             font-style: italic;
             font-weight: bold;
+        }
+        .disease-warning {
+            font-size: 11px;
+            color: #b71c1c;
+            background-color: #ffebee;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+            font-weight: bold;
+            display: block;
+            border-left: 3px solid #d32f2f;
         }
         .todo-section {
             margin-top: 20px;
@@ -176,86 +224,107 @@
 <body>
 
 <div class="container">
-    <h1>🍱 BMI & กล่องข้าวดีไซน์สุขภาพ</h1>
     
-    <div class="form-group">
-        <label>เพศ</label>
-        <div class="radio-group">
-            <label><input type="radio" name="gender" value="ชาย" checked> ชาย</label>
-            <label><input type="radio" name="gender" value="หญิง"> หญิง</label>
+    <!-- หน้าที่ 1: หน้ากรอกข้อมูลข้อมูลตนเอง -->
+    <div id="formScreen" class="screen active">
+        <h1>🍱 กรอกข้อมูลสุขภาพของคุณ</h1>
+        
+        <div class="form-group">
+            <label>เพศ</label>
+            <div class="radio-group">
+                <label><input type="radio" name="gender" value="ชาย" checked> ชาย</label>
+                <label><input type="radio" name="gender" value="หญิง"> หญิง</label>
+            </div>
         </div>
-    </div>
 
-    <div class="form-group">
-        <label for="weight">น้ำหนัก (กิโลกรัม)</label>
-        <input type="number" id="weight" value="65" step="0.1">
-    </div>
-
-    <div class="form-group">
-        <label for="height">ส่วนสูง (เซนติเมตร)</label>
-        <input type="number" id="height" value="170" step="0.1">
-    </div>
-
-    <div class="form-group">
-        <label>ประวัติการแพ้อาหาร (เลือกได้มากกว่า 1)</label>
-        <div class="checkbox-grid">
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="seafood"> แพ้อาหารทะเล</label>
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="nut"> แพ้ถั่วต่างๆ</label>
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="eggmilk"> แพ้นม/ไข่</label>
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="flour"> แพ้แป้ง (กลูเตน)</label>
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="protein"> แพ้โปรตีน (เลี่ยงเนื้อแดง)</label>
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="cowmilk"> แพ้นมวัว</label>
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="soy"> แพ้ถั่วเหลือง (เต้าหู้/ซีอิ๊ว)</label>
-            <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="sesame"> แพ้งา</label>
+        <div class="form-group">
+            <label for="weight">น้ำหนัก (กิโลกรัม)</label>
+            <input type="number" id="weight" value="65" step="0.1">
         </div>
+
+        <div class="form-group">
+            <label for="height">ส่วนสูง (เซนติเมตร)</label>
+            <input type="number" id="height" value="170" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="diseaseInput">โรคประจำตัว (พิมพ์ระบุได้ เช่น เบาหวาน, เกาต์, กรดไหลย้อน)</label>
+            <input type="text" id="diseaseInput" placeholder="ตัวอย่าง: เบาหวาน, ความดัน, โรคหัวใจ, โรคไต (เว้นว่างได้)">
+        </div>
+
+        <div class="form-group">
+            <label>ประวัติการแพ้อาหาร (เลือกได้มากกว่า 1)</label>
+            <div class="checkbox-grid">
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="seafood"> แพ้อาหารทะเล</label>
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="nut"> แพ้ถั่วต่างๆ</label>
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="eggmilk"> แพ้นม/ไข่</label>
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="flour"> แพ้แป้ง (กลูเตน)</label>
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="protein"> แพ้โปรตีน (เลี่ยงเนื้อแดง)</label>
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="cowmilk"> แพ้นมวัว</label>
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="soy"> แพ้ถั่วเหลือง</label>
+                <label class="checkbox-item"><input type="checkbox" class="allergy-check" value="sesame"> แพ้งา</label>
+            </div>
+        </div>
+
+        <button onclick="calculateBMI()">ตรวจสอบและจัดกล่องข้าว</button>
     </div>
 
-    <button onclick="calculateBMI()">คำนวณและจัดกล่องข้าว</button>
-
-    <div id="result" class="result-box">
-        <h3>📊 ผลการประมวลผล</h3>
+    <!-- หน้าที่ 2: หน้าแสดงผลลัพธ์ข้อมูลต่างๆ -->
+    <div id="resultScreen" class="screen">
+        <h2>📊 ผลการประมวลผลสุขภาพ</h2>
+        
         <div id="bmiBadge" class="bmi-badge"></div>
         <div id="calorieBadge" class="calorie-badge"></div>
         
-        <h3>🍱 กล่องข้าวของคุณวันนี้</h3>
+        <h3>🍱 กล่องข้าวดีไซน์สุขภาพของคุณ <small style="font-size:12px; font-weight:normal; color:#666;">(กด 🔄 เพื่อเปลี่ยนเมนูได้)</small></h3>
         <div class="bento-box">
             <div class="bento-grid">
                 <div class="bento-cell bento-main">
                     <span class="badge" style="background-color: #D9534F;">อาหารจานหลัก</span>
+                    <button class="btn-inline-refresh" onclick="refreshSingleCell('main')" title="เปลี่ยนเมนูจานหลัก">🔄</button>
                     <p class="food-text" id="menuMain"></p>
                     <p class="weight-text" id="weightMain"></p>
+                    <div id="warnMain" class="disease-warning" style="display:none;"></div>
                 </div>
                 <div class="bento-side-container">
                     <div class="bento-cell bento-side1">
                         <span class="badge" style="background-color: #F0AD4E;">เครื่องเคียง 1</span>
+                        <button class="btn-inline-refresh" onclick="refreshSingleCell('side')" title="เปลี่ยนเครื่องเคียง">🔄</button>
                         <p class="food-text" id="menuSide1"></p>
                         <p class="weight-text" id="weightSide1"></p>
+                        <div id="warnSide1" class="disease-warning" style="display:none;"></div>
                     </div>
                     <div class="bento-cell bento-side2">
                         <span class="badge" style="background-color: #5CB85C;">ผัก/วิตามิน</span>
+                        <button class="btn-inline-refresh" onclick="refreshSingleCell('veggie')" title="เปลี่ยนเมนูผัก">🔄</button>
                         <p class="food-text" id="menuSide2"></p>
                         <p class="weight-text" id="weightSide2"></p>
+                        <div id="warnSide2" class="disease-warning" style="display:none;"></div>
                     </div>
                 </div>
             </div>
             <div class="bento-cell bento-snack">
                 <span class="badge" style="background-color: #5BC0DE;">ของว่าง / ผลไม้</span>
+                <button class="btn-inline-refresh" onclick="refreshSingleCell('snack')" title="เปลี่ยนของว่าง/ผลไม้">🔄</button>
                 <p class="food-text" id="menuSnack"></p>
                 <p class="weight-text" id="weightSnack"></p>
+                <div id="warnSnack" class="disease-warning" style="display:none;"></div>
             </div>
         </div>
 
-        <button class="btn-reset" onclick="rerollFood()">🔄 สุ่มเปลี่ยนเมนูอาหารใหม่</button>
+        <button class="btn-reset-all" onclick="rerollAllFood()">🔄 สุ่มเปลี่ยนอาหารใหม่หมดทุกช่อง</button>
 
         <div class="todo-section">
             <h3>🏃‍♂️ สิ่งที่ควรทำ (Action Plan)</h3>
             <ul id="todoList"></ul>
         </div>
+
+        <button class="btn-back" onclick="goBackToForm()">⬅️ ย้อนกลับไปแก้ไขข้อมูล</button>
     </div>
+
 </div>
 
 <script>
-// คลังวัตถุดิบขนาดใหญ่ขึ้นที่ถูกระบุแท็กการแพ้ทั้ง 8 ชนิดอย่างละเอียด
 const foodPool = {
     main: [
         { name: "ข้าวกล้อง + อกไก่ย่างเกลือและสมุนไพร", tags: [] },
@@ -309,10 +378,17 @@ let currentWeights = {};
 let currentCalorie = 0;
 let activeAllergies = [];
 
+let diseases = {
+    diabetes: false, hypertension: false, heart: false, kidney: false,
+    liver: false, gout: false, fat: false, gerd: false,
+    gastritis: false, foodallergy: false, ibd: false, thalassemia: false
+};
+
 function calculateBMI() {
     const weight = parseFloat(document.getElementById('weight').value);
     const heightCm = parseFloat(document.getElementById('height').value);
     const gender = document.querySelector('input[name="gender"]:checked').value;
+    const diseaseText = document.getElementById('diseaseInput').value.trim();
     
     if (!weight || !heightCm) {
         alert("กรุณากรอกข้อมูลให้ครบถ้วนครับ");
@@ -328,38 +404,46 @@ function calculateBMI() {
     let bmrFactor = (gender === "ชาย") ? 30 : 27;
     let dailyCalorie = weight * bmrFactor;
 
-    // ประมวลผลเกณฑ์ปริมาณกรัมตามระดับ BMI
     if (bmi < 18.5) {
-        status = "น้ำหนักน้อยกว่ามาตรฐาน (ผอม)"; color = "#FFC107";
-        dailyCalorie += 350; 
+        status = "น้ำหนักน้อยกว่ามาตรฐาน (ผอม)"; color = "#FFC107"; dailyCalorie += 350; 
         currentWeights = { main: "คาร์บ 160g + เนื้อสัตว์ 130g", side: "โปรตีนเสริม 80g", veggie: "ผักต่างๆ 100g", snack: "ปริมาณ 80g" };
-        todo = ["เน้นเวทเทรนนิ่งสร้างกล้ามเนื้อ", "แบ่งทานอาหารเป็นมื้อย่อยวันละ 5-6 มื้อ", "เพิ่มของว่างที่มีประโยชน์ระหว่างวัน"];
+        todo = ["เน้นเวทเทรนนิ่งสร้างกล้ามเนื้อ", "แบ่งทานอาหารเป็นมื้อย่อยวันละ 5-6 มื้อ"];
     } else if (bmi >= 18.5 && bmi < 23.0) {
         status = "น้ำหนักปกติ (สุขภาพดี)"; color = "#28A745";
         currentWeights = { main: "คาร์บ 130g + เนื้อสัตว์ 120g", side: "โปรตีนเสริม 60g", veggie: "ผักต่างๆ 100g", snack: "ปริมาณ 70g" };
-        todo = ["รักษามาตรฐานนี้ไว้ ออกกำลังกายให้สม่ำเสมอ", "เน้นกินอาหารหลากหลายให้ครบ 5 หมู่", "นอนหลับพักผ่อนให้ได้ 7-8 ชั่วโมง"];
+        todo = ["รักษามาตรฐานนี้ไว้ ออกกำลังกายให้สม่ำเสมอ", "เน้นกินอาหารหลากหลายให้ครบ 5 หมู่"];
     } else if (bmi >= 23.0 && bmi < 25.0) {
-        status = "น้ำหนักเกิน (ท้วม)"; color = "#FD7E14";
-        dailyCalorie -= 250; 
+        status = "น้ำหนักเกิน (ท้วม)"; color = "#FD7E14"; dailyCalorie -= 250; 
         currentWeights = { main: "คาร์บน้อย 90g + เนื้อสัตว์ลีน 120g", side: "โปรตีนลีน 50g", veggie: "ผักเน้นๆ 150g", snack: "ปริมาณ 50g" };
-        todo = ["ลดของทอด ของมัน แป้งขัดสี และขนมหวาน", "คาร์ดิโออย่างน้อย 30-45 นาทีต่อวัน เช่น เดินเร็ว วิ่งเหยาะๆ"];
+        todo = ["ลดของทอด ของมัน แป้งขัดสี และขนมหวาน", "คาร์ดิโออย่างน้อย 30-45 นาทีต่อวัน"];
     } else {
-        status = "โรคอ้วน (ควรควบคุมน้ำหนัก)"; color = "#DC3545";
-        dailyCalorie -= 500; 
+        status = "โรคอ้วน (ควรควบคุมน้ำหนัก)"; color = "#DC3545"; dailyCalorie -= 500; 
         currentWeights = { main: "คาร์บต่ำมาก 60g + เนื้อสัตว์ลีน 130g", side: "โปรตีนลีน 50g", veggie: "ผักเน้นๆ 180g", snack: "ปริมาณ 50g" };
-        todo = ["งดน้ำหวาน น้ำอัดลม และเบเกอรี่อย่างเด็ดขาด", "เน้นออกกำลังกายประเภทลดแรงกระแทก เช่น เดินเร็ว หรือว่ายน้ำ", "เน้นทานโปรตีนและผักใบเขียวให้อิ่มท้อง"];
+        todo = ["งดน้ำหวาน น้ำอัดลม และของหวานเด็ดขาด", "เน้นออกกำลังกายประเภทลดแรงกระแทกเพื่อเซฟข้อ"];
     }
 
     currentCalorie = Math.round(dailyCalorie / 3);
 
-    // เก็บบันทึกข้อมูลสารอาหารที่ผู้ใช้แพ้ทั้งหมดลง Array
     activeAllergies = [];
     const checks = document.querySelectorAll('.allergy-check:checked');
-    checks.forEach(chk => {
-        activeAllergies.push(chk.value);
-    });
+    checks.forEach(chk => { activeAllergies.push(chk.value); });
 
-    // แสดงข้อมูลใน UI ทั่วไป
+    // ดักจับ Keyword โรค
+    diseases.diabetes = diseaseText.includes("เบาหวาน");
+    diseases.hypertension = diseaseText.includes("ความดัน");
+    diseases.heart = diseaseText.includes("หัวใจ");
+    diseases.kidney = diseaseText.includes("ไต");
+    diseases.liver = diseaseText.includes("ตับ");
+    diseases.gout = diseaseText.includes("เกาต์") || diseaseText.includes("เก๊าท์");
+    diseases.fat = diseaseText.includes("ไขมัน");
+    diseases.gerd = diseaseText.includes("กรดไหลย้อน");
+    diseases.gastritis = diseaseText.includes("กระเพาะ");
+    diseases.foodallergy = diseaseText.includes("ภูมิแพ้อาหาร");
+    diseases.ibd = diseaseText.includes("ลำไส้อักเสบ");
+    diseases.thalassemia = diseaseText.includes("ธาลัสซีเมีย");
+
+    handleDiseaseModifications(todo);
+
     document.getElementById('bmiBadge').style.backgroundColor = color;
     document.getElementById('bmiBadge').innerHTML = `เพศ: ${gender} | ค่า BMI: ${bmi.toFixed(2)}<br><small>เกณฑ์: ${status}</small>`;
     document.getElementById('calorieBadge').innerHTML = `🎯 พลังงานที่แนะนำในกล่องข้าวมื้อนี้: <b>${currentCalorie} kcal</b>`;
@@ -372,37 +456,123 @@ function calculateBMI() {
         todoList.appendChild(li);
     });
 
-    // ทำการจัดกล่องข้าวรอบแรก
-    rerollFood();
+    rerollAllFood();
 
-    document.getElementById('result').style.display = 'block';
+    // สลับหน้าจอซ่อนแบบฟอร์ม -> แสดงผลลัพธ์
+    document.getElementById('formScreen').classList.remove('active');
+    document.getElementById('resultScreen').classList.add('active');
 }
 
-// ฟังก์ชันสุ่มอาหารแบบคัดสิ่งสุ่มเสี่ยงออกร้อยเปอร์เซ็นต์
+function handleDiseaseModifications(todo) {
+    const warns = ['warnMain', 'warnSide1', 'warnSide2', 'warnSnack'];
+    warns.forEach(id => {
+        document.getElementById(id).style.display = 'none';
+        document.getElementById(id).innerHTML = '';
+    });
+
+    const addWarn = (id, text) => {
+        const el = document.getElementById(id);
+        el.innerHTML += (el.innerHTML ? "<br>" : "") + text;
+        el.style.display = 'block';
+    };
+
+    if (diseases.diabetes) {
+        currentWeights.snack = "จำกัดต่ำมาก 30g (ประมาณ 3 คำพอหายอยาก)";
+        addWarn('warnSnack', '⚠️ เบาหวาน: เลี่ยงผลไม้หวานจัดเด็ดขาด เน้นฝรั่ง/แอปเปิ้ลเขียวชิ้นเล็ก');
+        addWarn('warnMain', '⚠️ เบาหวาน: ควรใช้ข้าวกล้อง/ไรซ์เบอร์รี่เพื่อคุมการหลั่งน้ำตาล');
+        todo.push("🩺 [เบาหวาน] ควรเลี่ยงการรับประทานผลไม้ทันทีหลังมื้ออาหารหลัก");
+    }
+    if (diseases.hypertension) {
+        addWarn('warnMain', '⚠️ ความดัน: เน้นลดเค็ม งดการสาดน้ำปลา/ซีอิ๊วเพิ่ม');
+        addWarn('warnSide1', '⚠️ ความดัน: เลี่ยงเนื้อสัตว์แปรรูปที่มีโซเดียมแฝงสูง');
+        todo.push("🩺 [ความดัน] จำกัดปริมาณโซเดียมรวมไม่เกิน 2,000 มก. ต่อวัน");
+    }
+    if (diseases.heart) {
+        addWarn('warnMain', '⚠️ โรคหัวใจ: หลีกเลี่ยงไขมันอิ่มตัวสูง เน้นใช้น้ำมันมะกอก/รำข้าวปริมาณต่ำ');
+        addWarn('warnSide1', '⚠️ โรคหัวใจ: เน้นโปรตีนปลาที่มีโอเมก้า 3 ช่วยบำรุงหลอดเลือด');
+        todo.push("🩺 [โรคหัวใจ] เลี่ยงของทอด ของมัน และอาหารที่มีคอเลสเตอรอลสูง");
+    }
+    if (diseases.kidney) {
+        addWarn('warnSide2', '⚠️ โรคไต: เลี่ยงผักโพแทสเซียมสูง (แครอท/บล็อคโคลี่) แนะนำผักกาดขาวลวกสุกบีบน้ำออก');
+        addWarn('warnSnack', '⚠️ โรคไต: งดทานถั่วเปลือกแข็งทุกชนิดเพราะฟอสฟอรัสสูงมาก');
+        todo.push("🩺 [โรคไต] ระวังเรื่องปริมาณโปรตีนสัตว์ไม่ให้เกินเกณฑ์ที่แพทย์กำหนด");
+    }
+    if (diseases.liver) {
+        addWarn('warnMain', '⚠️ โรคตับ: เน้นอาหารปรุงสุกสะอาด 100% เลี่ยงของดิบเพื่อป้องกันการติดเชื้อซ้ำซ้อน');
+        addWarn('warnSide1', '⚠️ โรคตับ: เน้นโปรตีนย่อยง่าย เช่น เนื้อปลา หรืออกไก่เนื้อขาว');
+        todo.push("🩺 [โรคตับ] งดแอลกอฮอล์ อาหารหมักดอง และอาหารที่มีเชื้อรา");
+    }
+    if (diseases.gout) {
+        addWarn('warnMain', '⚠️ โรคเกาต์: เลี่ยงเนื้อสัตว์ปีก (อกไก่) เปลี่ยนเป็นเนื้อหมูสันใน หรือเนื้อปลาแทน');
+        addWarn('warnSide2', '⚠️ โรคเกาต์: เลี่ยงผักยอดอ่อน เช่น หน่อไม้ฝรั่ง ยอดผักต่างๆ');
+        todo.push("🩺 [โรคเกาต์] ดื่มน้ำเปล่าให้มากๆ เพื่อช่วยขับกรดยูริก");
+    }
+    if (diseases.fat) {
+        addWarn('warnSide1', '⚠️ ไขมันสูง: เลี่ยงเมนูไข่แดง (ทานได้เฉพาะไข่ขาว) ทานไข่แดงไม่เกิน 3-4 ฟอง/สัปดาห์');
+        addWarn('warnMain', '⚠️ ไขมันสูง: ตัดไขมันสัตว์และหนังออกให้หมด เน้นต้ม/นึ่ง/อบ ย่างเกลือ');
+        todo.push("🩺 [ไขมันสูง] งดกะทิ เนย มาการีน และอาหารที่มีไขมันทรานส์");
+    }
+    if (diseases.gerd) {
+        addWarn('warnMain', '⚠️ กรดไหลย้อน: งดเมนูเผ็ดจัด รสจัด หรือใส่น้ำมันพริกเผา');
+        addWarn('warnSnack', '⚠️ กรดไหลย้อน: เลี่ยงผลไม้รสเปรี้ยวจัด (ตระกูลเบอร์รี่/มะนาว)');
+        todo.push("🩺 [กรดไหลย้อน] ห้ามนอนราบหลังรับประทานอาหารทันที ต้องเว้นอย่างน้อย 3-4 ชั่วโมง");
+    }
+    if (diseases.gastritis) {
+        addWarn('warnMain', '⚠️ โรคกระเพาะ: งดพริกสด พริกไทยดำจัดๆ และอาหารรสเปรี้ยว/เผ็ดทึ่ระคายเคืองกระเพาะ');
+        todo.push("🩺 [โรคกระเพาะ] ควรทานอาหารให้ตรงเวลา เคี้ยวอาหารให้ละเอียดก่อนกลืน");
+    }
+    if (diseases.foodallergy) {
+        addWarn('warnMain', '⚠️ ภูมิแพ้อาหาร: โปรดตรวจสอบวัตถุดิบและเครื่องปรุงแฝงในจานอย่างละเอียดอีกครั้ง');
+        todo.push("🩺 [ภูมิแพ้อาหาร] สังเกตอาการผิดปกติทุกครั้งหลังลองอาหารเมนูใหม่");
+    }
+    if (diseases.ibd) {
+        addWarn('warnSide2', '⚠️ ลำไส้อักเสบ: ช่วงมีอาการให้เลี่ยงผักสด เปลี่ยนเป็นผักต้มเปื่อยจนนิ่ม');
+        addWarn('warnSnack', '⚠️ ลำไส้อักเสบ: เลี่ยงอาหารที่มีนมวัวเป็นส่วนประกอบหากมีอาการท้องเสีย');
+        todo.push("🩺 [ลำไส้อักเสบ] เน้นอาหารที่ย่อยง่าย รสจืด และหลีกเลี่ยงอาหารไขมันสูง");
+    }
+    if (diseases.thalassemia) {
+        addWarn('warnSide1', '⚠️ ธาลัสซีเมีย: ควรระวังอาหารที่ปรุงแต่งหรือเสริมธาตุเหล็ก');
+        todo.push("🩺 [ธาลัสซีเมีย] ห้ามซื้อยาหรืออาหารเสริมที่มีส่วนผสมของธาตุเหล็กมาทานเองเด็ดขาด");
+    }
+}
+
 function getRandomFood(category) {
     const filtered = foodPool[category].filter(item => {
-        // เช็คว่าไอเทมอาหารนี้มีสารที่ผู้ใช้แพ้หรือไม่
         return !item.tags.some(tag => activeAllergies.includes(tag));
     });
-    
-    // หากผู้ใช้แพ้หลายอย่างจนตัวเลือกในหมวดหมู่หมดลง ระบบจะดึง "อกไก่/ผักต้ม/แอปเปิ้ล" (อันแรกในคลัง) ที่เซฟสุดมาให้เพื่อความปลอดภัย
     const poolToUse = filtered.length > 0 ? filtered : [foodPool[category][0]];
     const randomIndex = Math.floor(Math.random() * poolToUse.length);
     return poolToUse[randomIndex].name;
 }
 
-function rerollFood() {
-    document.getElementById('menuMain').innerText = getRandomFood('main');
-    document.getElementById('weightMain').innerText = `⚖️ แนะนำ: ${currentWeights.main}`;
+function refreshSingleCell(category) {
+    const newFood = getRandomFood(category);
+    if (category === 'main') {
+        document.getElementById('menuMain').innerText = newFood;
+        document.getElementById('weightMain').innerText = `⚖️ แนะนำ: ${currentWeights.main}`;
+    } else if (category === 'side') {
+        document.getElementById('menuSide1').innerText = newFood;
+        document.getElementById('weightSide1').innerText = `⚖️ แนะนำ: ${currentWeights.side}`;
+    } else if (category === 'veggie') {
+        document.getElementById('menuSide2').innerText = newFood;
+        document.getElementById('weightSide2').innerText = `⚖️ แนะนำ: ${currentWeights.veggie}`;
+    } else if (category === 'snack') {
+        document.getElementById('menuSnack').innerText = newFood;
+        document.getElementById('weightSnack').innerText = `⚖️ แนะนำ: ${currentWeights.snack}`;
+    }
+}
 
-    document.getElementById('menuSide1').innerText = getRandomFood('side');
-    document.getElementById('weightSide1').innerText = `⚖️ แนะนำ: ${currentWeights.side}`;
+function rerollAllFood() {
+    refreshSingleCell('main');
+    refreshSingleCell('side');
+    refreshSingleCell('veggie');
+    refreshSingleCell('snack');
+}
 
-    document.getElementById('menuSide2').innerText = getRandomFood('veggie');
-    document.getElementById('weightSide2').innerText = `⚖️ แนะนำ: ${currentWeights.veggie}`;
-
-    document.getElementById('menuSnack').innerText = getRandomFood('snack');
-    document.getElementById('weightSnack').innerText = `⚖️ แนะนำ: ${currentWeights.snack}`;
+// ฟังก์ชันสำหรับกดปุ่มย้อนกลับไปหน้าแรก
+function goBackToForm() {
+    document.getElementById('resultScreen').classList.remove('active');
+    document.getElementById('formScreen').classList.add('active');
 }
 </script>
 

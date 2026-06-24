@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V18</title>
+    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V20</title>
     <style>
         :root {
             --primary-blue: #2980b9;
@@ -196,6 +196,7 @@
 
 <div class="container">
     
+    <!-- หน้าที่ 1: หน้าแสดงข้อมูลความรู้ และปุ่มเลือกบริการ -->
     <div id="infoScreen" class="screen active">
         <h1>📊 ข้อมูลดัชนีมวลกาย BMI</h1>
         <p style="line-height: 1.6; text-indent: 20px;">
@@ -241,6 +242,7 @@
         </div>
     </div>
 
+    <!-- หน้าที่ 2: หน้าแบบฟอร์มจัดกล่องข้าว Bento -->
     <div id="bentoFormScreen" class="screen">
         <h2>🍱 ข้อมูลจัดกล่องข้าวสุขภาพ</h2>
         <div class="form-group">
@@ -266,12 +268,13 @@
         </div>
         
         <div class="form-group" style="background: #fdfefe; border: 1px dashed #cbd5e1; padding: 12px; border-radius: 6px;">
-            <label style="color: var(--dark-blue); margin-bottom: 8px;">🚫 ประวัติการแพ้อาหาร (ระบบจะคัดเมนูออกให้):</label>
+            <label style="color: var(--dark-blue); margin-bottom: 8px;">🚫 ประวัติการแพ้อาหาร (เลือกเพื่อคัดเมนูที่มีส่วนผสมนี้ออก):</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; grid-gap: 8px;">
                 <label><input type="checkbox" class="allergy-check" value="seafood"> แพ้อาหารทะเล</label>
                 <label><input type="checkbox" class="allergy-check" value="nut"> แพ้ถั่วทุกชนิด</label>
                 <label><input type="checkbox" class="allergy-check" value="egg"> แพ้ไข่</label>
                 <label><input type="checkbox" class="allergy-check" value="milk"> แพ้นมวัว / แลคโตส</label>
+                <label><input type="checkbox" class="allergy-check" value="wheat"> แพ้แป้งสาลี / กลูเตน</label>
             </div>
         </div>
 
@@ -279,6 +282,7 @@
         <button class="btn-back" onclick="changeScreen('bentoFormScreen', 'infoScreen')">⬅️ กลับไปหน้าแรก</button>
     </div>
 
+    <!-- หน้าที่ 3: หน้าแบบฟอร์มตรวจสอบสารอาหารมื้อด่วน -->
     <div id="quickFormScreen" class="screen">
         <h2>📋 ตรวจสอบสารอาหารมื้อด่วน</h2>
         <p style="font-size:13px; color:#666; text-align:center; margin-bottom:15px;">ประเมินความสอดคล้องของสัดส่วนอาหารมื้อปัจจุบันกับร่างกายของคุณ</p>
@@ -300,6 +304,7 @@
             <button type="button" class="tab-btn" id="tabMenu" onclick="switchMethod('menu')">🍲 กรอกชื่อเมนูอาหาร</button>
         </div>
 
+        <!-- แบบที่ 1: แยกกรัม -->
         <div id="methodGramsForm">
             <div class="form-group">
                 <label style="color: var(--carb-color);">คาร์โบไฮเดรต / ข้าว-แป้ง-เส้น (กรัม):</label>
@@ -315,6 +320,7 @@
             </div>
         </div>
 
+        <!-- แบบที่ 2: เลือกชื่อเมนูอาหาร -->
         <div id="methodMenuForm" style="display:none;">
             <div class="form-group">
                 <label>พิมพ์ชื่อเมนู หรือเลือกเมนูจากลิสต์ด้านล่าง:</label>
@@ -351,6 +357,7 @@
         <button class="btn-back" onclick="changeScreen('quickFormScreen', 'infoScreen')">⬅️ กลับไปหน้าแรก</button>
     </div>
 
+    <!-- หน้าที่ 4: หน้าแสดงผลลัพธ์การจัดกล่องข้าว -->
     <div id="resultScreen" class="screen">
         <h2>📊 ผลการวิเคราะห์กล่องข้าวสุขภาพ</h2>
         <div id="bmiBadge" class="bmi-badge"></div>
@@ -396,6 +403,7 @@
         <button class="btn-back" onclick="changeScreen('resultScreen', 'bentoFormScreen')">⬅️ กลับไปแก้ไขข้อมูลร่างกาย</button>
     </div>
 
+    <!-- หน้าที่ 5: หน้าแสดงผลลัพธ์มื้อด่วน -->
     <div id="foodResultScreen" class="screen">
         <h2>📋 ผลการวิเคราะห์สัดส่วนสารอาหารมื้อนี้</h2>
         
@@ -437,12 +445,11 @@
 let currentMainFoodName = ""; 
 let currentInputMethod = "grams"; 
 
-// ฟังก์ชันสลับหน้าจอ (จะทำการปิดหน้าจอเดิม และเลื่อนหน้าต่างขึ้นด้านบนทันที เพื่อจำลองการเปลี่ยนหน้าใหม่)
 function changeScreen(hideId, showId) {
     const allScreens = document.querySelectorAll('.screen');
     allScreens.forEach(scr => { scr.classList.remove('active'); });
     document.getElementById(showId).classList.add('active');
-    window.scrollTo(0, 0); // ดีดหน้าจอกลับขึ้นด้านบนสุด
+    window.scrollTo(0, 0); 
 }
 
 function switchMethod(method) {
@@ -478,37 +485,60 @@ const mealDatabase = {
     "โจ๊กหมูใส่ไข่": { carb: 95, protein: 75, veggie: 10 }
 };
 
+// อัปเดตเมนูเพิ่มความหลากหลายกว่าเดิม 2 เท่า พร้อมติดแท็กภูมิแพ้แม่นยำ
 const bentoFoodPool = {
     main: [
         { name: "ข้าวกล้อง + อกไก่ย่างเกลือสุพรีม", tags: [] },
         { name: "ข้าวไรซ์เบอร์รี่ + ปลากะพงนึ่งมะนาวสด", tags: ["seafood"] },
-        { name: "เส้นหมี่ข้าวกล้อง + เนื้อปลาเก๋าลวกน้ำจิ้มแจ่ว", tags: ["seafood"] },
+        { name: "เส้นหมี่ข้าวกล้อง + เนื้อปลาเก๋าลวกจิ้มแจ่ว", tags: ["seafood", "wheat"] },
         { name: "ข้าวกล้อง + ลาบไก่สับลีนแซ่บ", tags: [] },
         { name: "ข้าวไรซ์เบอร์รี่ + อกไก่ผัดเม็ดมะม่วงหิมพานต์", tags: ["nut"] },
         { name: "ข้าวกล้อง + ปลาแซลมอนย่างเกลือชมพู", tags: ["seafood"] },
         { name: "เส้นบุกบะหมี่ + ผัดฉ่าเนื้อปลากะพงรสจัด", tags: ["seafood"] },
-        { name: "ข้าวไรซ์เบอร์รี่ + สันในหมูอบน้ำผึ้งโฮมเมด", tags: [] }
+        { name: "ข้าวไรซ์เบอร์รี่ + สันในหมูอบน้ำผึ้งโฮมเมด", tags: [] },
+        { name: "ข้าวขมิ้น + อกไก่ย่างตะไคร้หอม", tags: [] },
+        { name: "พาสต้าโฮลวีต + ซอสโบโลเนสไก่สับลีน", tags: ["wheat"] },
+        { name: "ข้าวกล้อง + กุ้งคั่วพริกเกลือกระเทียมสด", tags: ["seafood"] },
+        { name: "ข้าวไรซ์เบอร์รี่ + คั่วกลิ้งอกไก่สับรสใต้", tags: [] },
+        { name: "เส้นบุกผัดไทย + เต้าหู้ขาวและกุ้งแห้ง", tags: ["seafood", "nut", "egg"] },
+        { name: "ข้าวกล้อง + ฉู่ฉี่ปลาทูสดไร้น้ำมัน", tags: ["seafood"] },
+        { name: "ข้าวไรซ์เบอร์รี่ + เนื้อวัวสไลด์ผัดซอสหัวหอม", tags: [] }
     ],
     side: [
         { name: "ไข่ต้มยางมะตูมเบอร์ใหญ่", tags: ["egg"] },
         { name: "เต้าหู้ขาวนึ่งโรยต้นหอมซีอิ๊วโซเดียมต่ำ", tags: [] },
         { name: "ไข่ตุ๋นสมุนไพรเนื้อเนียนใส่ไก่สับ", tags: ["egg"] },
         { name: "ไข่ข้นไร้น้ำมันเนื้อนุ่มนิ่ม", tags: ["egg"] },
-        { name: "เต้าหู้เหลืองผัดถั่วงอกลีน", tags: [] }
+        { name: "เต้าหู้เหลืองผัดถั่วงอกลีน", tags: [] },
+        { name: "ไข่ต้มสมุนไพรพะโล้แห้ง", tags: ["egg"] },
+        { name: "เต้าหู้ญี่ปุ่นทอดหม้อทอดไร้น้ำมันซอสเทริยากิ", tags: [] },
+        { name: "ไข่ดาวน้ำ (Poached Egg) สไตล์คลีน", tags: ["egg"] },
+        { name: "ลูกชิ้นอกไก่โฮมเมดนึ่งน้ำจิ้มซีฟู้ด", tags: [] },
+        { name: "ถั่วแระญี่ปุ่นต้มโรยเกลือทะเล", tags: ["nut"] } // นับเป็นกลุ่มพืชตระกูลถั่ว
     ],
     veggie: [
         { name: "บล็อคโคลี่และแครอทต้มหวานธรรมชาติ", tags: [] },
         { name: "หน่อไม้ฝรั่งและเห็ดออรินจิผัดน้ำมันมะกอก", tags: [] },
         { name: "กะหล่ำปลีตุ๋นเห็ดหอมรสกลมกล่อม", tags: [] },
         { name: "ผักกวางตุ้งฮ่องเต้นึ่งกระเทียมโทน", tags: [] },
-        { name: "ผัดบล็อคโคลี่ใส่กุ้งสดแกะเปลือก", tags: ["seafood"] }
+        { name: "ผัดบล็อคโคลี่ใส่กุ้งสดแกะเปลือก", tags: ["seafood"] },
+        { name: "ผัดผักรวมมิตรเบญจพรรณ (คะน้า แครอท ข้าวโพดอ่อน เห็ด)", tags: [] },
+        { name: "ฟักทองญี่ปุ่นนึ่งเนื้อหนึบหนับ", tags: [] },
+        { name: "มะเขือยาวผัดใบโหระพาพริกสด", tags: [] },
+        { name: "สลัดแก้วและมะเขือเทศราชินีน้ำสลัดงาญี่ปุ่น", tags: ["wheat"] }, // น้ำสลัดมักมีส่วนผสมซีอิ๊ว/แป้งสาลี
+        { name: "ยอดมะระหวานผัดน้ำมันหอยโซเดียมต่ำ", tags: [] }
     ],
     snack: [
         { name: "แอปเปิ้ลเขียวสดคัดพิเศษ 1 ลูก", tags: [] },
         { name: "ฝรั่งกิมจูสดกรอบวิตามินซีสูง", tags: [] },
         { name: "แก้วมังกรเนื้อขาวหั่นชิ้นพอดีคำ", tags: [] },
         { name: "ส้มสายน้ำผึ้งรสหวานอมเปรี้ยว 1 ลูก", tags: [] },
-        { name: "โยเกิร์ตรสธรรมชาติไขมัน 0% 1 ถ้วย", tags: ["milk"] }
+        { name: "โยเกิร์ตรสธรรมชาติไขมัน 0% 1 ถ้วย", tags: ["milk"] },
+        { name: "ขนมปังโฮลวีตปิ้งซอสสตรอว์เบอร์รี่ลีน", tags: ["wheat"] },
+        { name: "กล้วยหอมทองผลกลาง 1 ลูก", tags: [] },
+        { name: "สับปะรดภูแลหั่นชิ้นฉ่ำน้ำ", tags: [] },
+        { name: "มะละกอสุกหวานธรรมชาติ", tags: [] },
+        { name: "เมล็ดอัลมอนด์อบธรรมชาติไร้เกลือ 1 กำมือ", tags: ["nut"] }
     ]
 };
 
@@ -628,7 +658,7 @@ function calculateBentoBMI() {
 
 function refreshSingleCell(category) {
     const filtered = bentoFoodPool[category].filter(item => !item.tags.some(tag => activeAllergies.includes(tag)));
-    const finalPool = filtered.length > 0 ? filtered : [bentoFoodPool[category][0]];
+    const finalPool = filtered.length > 0 ? filtered : [{name: "ข้าวกล้องเปล่า + ผักนึ่งลีน (เมนูปลอดภัยพิเศษ)", tags: []}];
     const newFood = finalPool[Math.floor(Math.random() * finalPool.length)].name;
 
     if (category === 'main') { 

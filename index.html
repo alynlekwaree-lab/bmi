@@ -230,11 +230,11 @@
     <!-- หน้าล็อกอิน / สมัครสมาชิก -->
     <div id="authScreen" class="screen active">
         <h1>🔐 เข้าสู่ระบบบัญชีสุขภาพ</h1>
-        <p style="text-align:center; font-size:14px; color:#666;">เข้าสู่ระบบเพื่อบันทึกประวัติ ดูสถิติ และแข่งอันดับ BMI</p>
+        <p style="text-align:center; font-size:14px; color:#666;">เข้าสู่ระบบเพื่อบันทึกประวัติ ดูสถิติ และแข่งอันดับ BMI กับเพื่อน</p>
         
         <div class="method-tabs">
             <button type="button" class="tab-btn active" id="tabLogin" onclick="switchAuthMode('login')">เข้าสู่ระบบ</button>
-            <button type="button" class="tab-btn" id="tabRegister" onclick="switchAuthMode('register')">สมัครสมาชิกใหม่</button>
+            <button type="button" class="tab-btn" id="tabRegister" onclick="switchAuthMode('register')">สมัครสมาชิกใหม่ / บัญชีเพื่อน</button>
         </div>
 
         <div class="form-group">
@@ -438,7 +438,7 @@
     <div id="leaderboardScreen" class="screen">
         <h2>🏆 ตารางจัดอันดับดัชนีสุขภาพ (Health Leaderboard)</h2>
         <p style="text-align:center; font-size:13.5px; color:#666;">
-            อันดับจะเรียงตาม **คะแนนความสมส่วน (Health Score)** ผู้ที่รักษาสภาพร่างกายอยู่ในเกณฑ์สมส่วน (BMI ชาย 20-24.9 / หญิง 18.5-23.9) จะได้อันดับสูงที่สุดครับ!
+            อันดับจะเรียงตาม **คะแนนความสมส่วน (Health Score)** โดยคำนวณจากคนที่ค่า BMI อยู่ในเกณฑ์ปกติของแต่ละเพศครับ
         </p>
 
         <table class="info-table" style="margin-bottom:20px;">
@@ -466,21 +466,17 @@ let currentUser = null;
 let bmiChartInstance = null;
 
 // ==========================================
-// ระบบบัญชีผู้ใช้งาน & ตัวอย่างข้อมูลตั้งต้น
+// ระบบตรวจสอบและจดจำการ Login (แก้ปัญหารีเฟรชแล้วหลุด)
 // ==========================================
-function seedDefaultUsers() {
-    let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
-    if (Object.keys(users).length === 0) {
-        users = {
-            "FitGuy_Alex": { password: "123", history: [{ date: "01/08 10:00", weight: 68, height: 175, bmi: 22.2, gender: "ชาย" }] },
-            "Healthy_Sarah": { password: "123", history: [{ date: "02/08 11:30", weight: 52, height: 162, bmi: 19.8, gender: "หญิง" }] },
-            "Runner_Tom": { password: "123", history: [{ date: "03/08 14:20", weight: 82, height: 170, bmi: 28.3, gender: "ชาย" }] },
-            "Joy_Pilates": { password: "123", history: [{ date: "04/08 09:15", weight: 44, height: 160, bmi: 17.1, gender: "หญิง" }] }
-        };
-        localStorage.setItem('bentoUsers', JSON.stringify(users));
+window.addEventListener('DOMContentLoaded', () => {
+    const savedUser = localStorage.getItem('bentoCurrentLoggedInUser');
+    if (savedUser) {
+        currentUser = savedUser;
+        document.getElementById('displayUsername').innerText = currentUser;
+        document.getElementById('userBar').style.display = 'flex';
+        changeScreen('authScreen', 'infoScreen');
     }
-}
-seedDefaultUsers();
+});
 
 function switchAuthMode(mode) {
     currentAuthMode = mode;
@@ -491,7 +487,7 @@ function switchAuthMode(mode) {
     } else {
         document.getElementById('tabLogin').classList.remove('active');
         document.getElementById('tabRegister').classList.add('active');
-        document.getElementById('btnAuthSubmit').innerText = "สมัครสมาชิก 📝";
+        document.getElementById('btnAuthSubmit').innerText = "สมัครสมาชิก / บัญชีเพื่อน 📝";
     }
 }
 
@@ -511,7 +507,7 @@ function handleAuthSubmit() {
         }
         users[username] = { password: password, history: [] };
         localStorage.setItem('bentoUsers', JSON.stringify(users));
-        alert("สมัครสมาชิกเรียบร้อยแล้ว! ระบบกำลังเข้าสู่ระบบให้คุณ");
+        alert(`สร้างบัญชี "${username}" เรียบร้อย! ระบบจะสลับเข้าสู่บัญชีนี้ให้ทันที`);
         loginSuccess(username);
     } else {
         if (!users[username] || users[username].password !== password) {
@@ -523,6 +519,7 @@ function handleAuthSubmit() {
 
 function loginSuccess(username) {
     currentUser = username;
+    localStorage.setItem('bentoCurrentLoggedInUser', username); // บันทึกไว้ไม่ให้หลุดตอนรีเฟรช
     document.getElementById('displayUsername').innerText = username;
     document.getElementById('userBar').style.display = 'flex';
     document.getElementById('authUsername').value = '';
@@ -532,6 +529,7 @@ function loginSuccess(username) {
 
 function logoutUser() {
     currentUser = null;
+    localStorage.removeItem('bentoCurrentLoggedInUser');
     document.getElementById('userBar').style.display = 'none';
     changeScreen(getCurrentActiveScreen(), 'authScreen');
 }
@@ -542,13 +540,11 @@ function getCurrentActiveScreen() {
 }
 
 // ==========================================
-// ระบบจัดอันดับผู้ใช้งาน (Leaderboard)
+// ระบบจัดอันดับผู้ใช้งานจริง (Leaderboard)
 // ==========================================
 function calculateHealthScore(bmi, gender) {
-    // คำนวณความเบี่ยงเบนจากค่ากลางของความสมส่วน
     const idealBmi = gender === 'ชาย' ? 22.5 : 21.2;
     const diff = Math.abs(bmi - idealBmi);
-    // ยิ่งใกล้ค่ากลาง คะแนนยิ่งใกล้ 100
     let score = 100 - (diff * 8);
     return Math.max(0, parseFloat(score.toFixed(1)));
 }
@@ -562,7 +558,7 @@ function renderLeaderboard() {
     let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
     let leaderboardData = [];
 
-    // ดึงข้อมูล BMI ล่าสุดของทุกคน
+    // ดึงข้อมูลผู้ใช้งานทุกคนที่มีการกรอก BMI
     Object.keys(users).forEach(uname => {
         const history = users[uname].history || [];
         if (history.length > 0) {
@@ -593,14 +589,14 @@ function renderLeaderboard() {
         }
     });
 
-    // เรียงลำดับตาม Health Score จากมากไปน้อย
+    // เรียงลำดับคะแนนสุขภาพ
     leaderboardData.sort((a, b) => b.score - a.score);
 
     const tbody = document.getElementById('leaderboardTableBody');
     tbody.innerHTML = '';
 
     if (leaderboardData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลผู้ใช้งานในระบบ</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลการคำนวณ BMI ในระบบ</td></tr>';
         return;
     }
 
@@ -628,7 +624,7 @@ function renderLeaderboard() {
 }
 
 // ==========================================
-// ระบบบันทึกและกราฟ BMI ความถี่สูง
+// ระบบบันทึกประวัติ BMI
 // ==========================================
 function saveBmiRecord(weight, height, bmi, gender) {
     if (!currentUser) return;
@@ -663,7 +659,6 @@ function renderHistoryTableAndChart() {
     let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
     const history = (users[currentUser] && users[currentUser].history) ? users[currentUser].history : [];
 
-    // 1. วาดตารางประวัติ
     const tbody = document.getElementById('historyTableBody');
     tbody.innerHTML = '';
 
@@ -681,7 +676,6 @@ function renderHistoryTableAndChart() {
         });
     }
 
-    // 2. วาดกราฟ BMI
     const labels = history.map(item => item.date);
     const dataBmi = history.map(item => item.bmi);
 
@@ -808,7 +802,6 @@ function calculateBentoBMI() {
     const heightM = heightCm / 100; 
     const bmi = weight / (heightM * heightM);
 
-    // บันทึกประวัติลงระบบ
     saveBmiRecord(weight, heightCm, bmi, gender);
 
     let status = "", color = "", todo = [], dailyCalorie = 0;

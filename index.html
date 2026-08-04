@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & จัดกล่องข้าวสุขภาพ (ระบบกราฟซูมพิเศษ)</title>
+    <title>โปรแกรมคำนวณ BMI & จัดกล่องข้าวสุขภาพ (พร้อมระบบจัดอันดับ)</title>
     <!-- นำเข้า Chart.js สำหรับวาดกราฟ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -17,6 +17,7 @@
             --carb-color: #e67e22;
             --protein-color: #e74c3c;
             --veggie-color: #2ecc71;
+            --gold: #f1c40f;
         }
 
         body {
@@ -72,14 +73,8 @@
         }
         .btn-logout:hover { background-color: #95a5a6; }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-gap: 10px;
-        }
+        .form-group { margin-bottom: 15px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 10px; }
         label {
             display: block;
             font-weight: bold;
@@ -104,11 +99,7 @@
             border-radius: 6px;
             border: 1px solid #e2e8f0;
         }
-        .gender-box label {
-            margin-bottom: 0;
-            cursor: pointer;
-            font-weight: normal;
-        }
+        .gender-box label { margin-bottom: 0; cursor: pointer; font-weight: normal; }
 
         .method-tabs {
             display: flex;
@@ -128,10 +119,7 @@
             border: none;
             cursor: pointer;
         }
-        .tab-btn.active {
-            background: var(--primary-blue);
-            color: white;
-        }
+        .tab-btn.active { background: var(--primary-blue); color: white; }
 
         button {
             width: 100%;
@@ -155,6 +143,8 @@
         .btn-maps:hover { background-color: #219a52; }
         .btn-back { background-color: #7f8c8d; margin-top: 15px; }
         .btn-back:hover { background-color: #95a5a6; }
+        .btn-leaderboard { background-color: #f39c12; margin-top: 12px; }
+        .btn-leaderboard:hover { background-color: #d35400; }
 
         .info-table {
             width: 100%;
@@ -219,6 +209,12 @@
         .todo-section { margin-top: 20px; }
         .todo-section ul { padding-left: 20px; }
         .todo-section li { margin-bottom: 8px; }
+
+        /* Leaderboard Highlight Styles */
+        .rank-1 { background-color: #fff9db !important; font-weight: bold; }
+        .rank-2 { background-color: #f1f3f5 !important; font-weight: bold; }
+        .rank-3 { background-color: #ffe8cc !important; font-weight: bold; }
+        .my-rank { border: 2px solid var(--primary-red) !important; }
     </style>
 </head>
 <body>
@@ -234,7 +230,7 @@
     <!-- หน้าล็อกอิน / สมัครสมาชิก -->
     <div id="authScreen" class="screen active">
         <h1>🔐 เข้าสู่ระบบบัญชีสุขภาพ</h1>
-        <p style="text-align:center; font-size:14px; color:#666;">เข้าสู่ระบบเพื่อบันทึกประวัติ BMI และดูกราฟพัฒนาการย้อนหลัง</p>
+        <p style="text-align:center; font-size:14px; color:#666;">เข้าสู่ระบบเพื่อบันทึกประวัติ ดูสถิติ และแข่งอันดับ BMI</p>
         
         <div class="method-tabs">
             <button type="button" class="tab-btn active" id="tabLogin" onclick="switchAuthMode('login')">เข้าสู่ระบบ</button>
@@ -301,6 +297,7 @@
             <h3>⚡ กรุณาเลือกบริการที่ต้องการ</h3>
             <button class="btn-next" onclick="changeScreen('infoScreen', 'bentoFormScreen')">🍱 1. คำนวณ BMI และจัดเซ็ตกล่องข้าวสุขภาพ</button>
             <button type="button" style="background-color: #8e44ad; margin-top:12px;" onclick="openHistoryGraphScreen()">📈 2. ดูประวัติและกราฟแนวโน้ม BMI ของฉัน</button>
+            <button type="button" class="btn-leaderboard" onclick="openLeaderboardScreen()">🏆 3. ตารางจัดอันดับสุขภาพกับผู้ใช้อื่น (Leaderboard)</button>
         </div>
     </div>
 
@@ -407,6 +404,7 @@
         </div>
         
         <button style="background-color: #8e44ad; margin-top:15px;" onclick="openHistoryGraphScreen()">📈 ดูกราฟประวัติ BMI ของคุณ</button>
+        <button class="btn-leaderboard" onclick="openLeaderboardScreen()">🏆 ดูอันดับสุขภาพของคุณบน Leaderboard</button>
         <button class="btn-back" onclick="changeScreen('resultScreen', 'bentoFormScreen')">⬅️ กลับไปแก้ไขข้อมูลร่างกาย</button>
     </div>
 
@@ -436,6 +434,29 @@
         <button class="btn-back" onclick="changeScreen('historyGraphScreen', 'infoScreen')">⬅️ กลับไปหน้าหลัก</button>
     </div>
 
+    <!-- หน้าตารางจัดอันดับ Leaderboard -->
+    <div id="leaderboardScreen" class="screen">
+        <h2>🏆 ตารางจัดอันดับดัชนีสุขภาพ (Health Leaderboard)</h2>
+        <p style="text-align:center; font-size:13.5px; color:#666;">
+            อันดับจะเรียงตาม **คะแนนความสมส่วน (Health Score)** ผู้ที่รักษาสภาพร่างกายอยู่ในเกณฑ์สมส่วน (BMI ชาย 20-24.9 / หญิง 18.5-23.9) จะได้อันดับสูงที่สุดครับ!
+        </p>
+
+        <table class="info-table" style="margin-bottom:20px;">
+            <thead>
+                <tr>
+                    <th>อันดับ</th>
+                    <th>ชื่อผู้ใช้งาน</th>
+                    <th>ค่า BMI ล่าสุด</th>
+                    <th>สถานะ</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardTableBody">
+            </tbody>
+        </table>
+
+        <button class="btn-back" onclick="changeScreen('leaderboardScreen', 'infoScreen')">⬅️ กลับไปหน้าหลัก</button>
+    </div>
+
 </div>
 
 <script>
@@ -445,8 +466,22 @@ let currentUser = null;
 let bmiChartInstance = null;
 
 // ==========================================
-// ระบบบัญชีผู้ใช้งาน (User Auth & LocalStorage)
+// ระบบบัญชีผู้ใช้งาน & ตัวอย่างข้อมูลตั้งต้น
 // ==========================================
+function seedDefaultUsers() {
+    let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
+    if (Object.keys(users).length === 0) {
+        users = {
+            "FitGuy_Alex": { password: "123", history: [{ date: "01/08 10:00", weight: 68, height: 175, bmi: 22.2, gender: "ชาย" }] },
+            "Healthy_Sarah": { password: "123", history: [{ date: "02/08 11:30", weight: 52, height: 162, bmi: 19.8, gender: "หญิง" }] },
+            "Runner_Tom": { password: "123", history: [{ date: "03/08 14:20", weight: 82, height: 170, bmi: 28.3, gender: "ชาย" }] },
+            "Joy_Pilates": { password: "123", history: [{ date: "04/08 09:15", weight: 44, height: 160, bmi: 17.1, gender: "หญิง" }] }
+        };
+        localStorage.setItem('bentoUsers', JSON.stringify(users));
+    }
+}
+seedDefaultUsers();
+
 function switchAuthMode(mode) {
     currentAuthMode = mode;
     if (mode === 'login') {
@@ -507,9 +542,95 @@ function getCurrentActiveScreen() {
 }
 
 // ==========================================
-// ระบบบันทึกและกราฟ BMI ความถี่สูง (High Sensitivity Zoom Chart)
+// ระบบจัดอันดับผู้ใช้งาน (Leaderboard)
 // ==========================================
-function saveBmiRecord(weight, height, bmi) {
+function calculateHealthScore(bmi, gender) {
+    // คำนวณความเบี่ยงเบนจากค่ากลางของความสมส่วน
+    const idealBmi = gender === 'ชาย' ? 22.5 : 21.2;
+    const diff = Math.abs(bmi - idealBmi);
+    // ยิ่งใกล้ค่ากลาง คะแนนยิ่งใกล้ 100
+    let score = 100 - (diff * 8);
+    return Math.max(0, parseFloat(score.toFixed(1)));
+}
+
+function openLeaderboardScreen() {
+    renderLeaderboard();
+    changeScreen(getCurrentActiveScreen(), 'leaderboardScreen');
+}
+
+function renderLeaderboard() {
+    let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
+    let leaderboardData = [];
+
+    // ดึงข้อมูล BMI ล่าสุดของทุกคน
+    Object.keys(users).forEach(uname => {
+        const history = users[uname].history || [];
+        if (history.length > 0) {
+            const lastRecord = history[history.length - 1];
+            const gender = lastRecord.gender || 'ชาย';
+            const score = calculateHealthScore(lastRecord.bmi, gender);
+            
+            let statusText = "สมส่วน";
+            let statusColor = "#27ae60";
+            
+            if (gender === 'ชาย') {
+                if (lastRecord.bmi < 20.0) { statusText = "ผอม"; statusColor = "#f1c40f"; }
+                else if (lastRecord.bmi >= 25.0 && lastRecord.bmi < 30.0) { statusText = "ท้วม"; statusColor = "#e67e22"; }
+                else if (lastRecord.bmi >= 30.0) { statusText = "อ้วน"; statusColor = "#e74c3c"; }
+            } else {
+                if (lastRecord.bmi < 18.5) { statusText = "ผอม"; statusColor = "#f1c40f"; }
+                else if (lastRecord.bmi >= 24.0 && lastRecord.bmi < 29.0) { statusText = "ท้วม"; statusColor = "#e67e22"; }
+                else if (lastRecord.bmi >= 29.0) { statusText = "อ้วน"; statusColor = "#e74c3c"; }
+            }
+
+            leaderboardData.push({
+                username: uname,
+                bmi: lastRecord.bmi,
+                score: score,
+                statusText: statusText,
+                statusColor: statusColor
+            });
+        }
+    });
+
+    // เรียงลำดับตาม Health Score จากมากไปน้อย
+    leaderboardData.sort((a, b) => b.score - a.score);
+
+    const tbody = document.getElementById('leaderboardTableBody');
+    tbody.innerHTML = '';
+
+    if (leaderboardData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลผู้ใช้งานในระบบ</td></tr>';
+        return;
+    }
+
+    leaderboardData.forEach((item, index) => {
+        const rank = index + 1;
+        let rankBadge = `${rank}`;
+        let rowClass = "";
+
+        if (rank === 1) { rankBadge = "🥇 1"; rowClass = "rank-1"; }
+        else if (rank === 2) { rankBadge = "🥈 2"; rowClass = "rank-2"; }
+        else if (rank === 3) { rankBadge = "🥉 3"; rowClass = "rank-3"; }
+
+        if (item.username === currentUser) {
+            rowClass += " my-rank";
+        }
+
+        let row = `<tr class="${rowClass}">
+            <td>${rankBadge}</td>
+            <td>${item.username} ${item.username === currentUser ? '<b>(คุณ)</b>' : ''}</td>
+            <td style="font-weight:bold;">${item.bmi}</td>
+            <td><span style="color:${item.statusColor}; font-weight:bold;">${item.statusText}</span></td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+
+// ==========================================
+// ระบบบันทึกและกราฟ BMI ความถี่สูง
+// ==========================================
+function saveBmiRecord(weight, height, bmi, gender) {
     if (!currentUser) return;
 
     let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
@@ -522,7 +643,8 @@ function saveBmiRecord(weight, height, bmi) {
         date: dateStr,
         weight: weight,
         height: height,
-        bmi: parseFloat(bmi.toFixed(2))
+        bmi: parseFloat(bmi.toFixed(2)),
+        gender: gender
     };
 
     if (!users[currentUser].history) users[currentUser].history = [];
@@ -559,15 +681,13 @@ function renderHistoryTableAndChart() {
         });
     }
 
-    // 2. วาดกราฟ BMI แบบ Dynamic Zoom ความไวสูง
+    // 2. วาดกราฟ BMI
     const labels = history.map(item => item.date);
     const dataBmi = history.map(item => item.bmi);
 
-    // หาค่า Min / Max เพื่อซูมสเกลแกน Y ให้เห็นความต่างชัดเจน
     let minBmi = dataBmi.length > 0 ? Math.min(...dataBmi) : 18;
     let maxBmi = dataBmi.length > 0 ? Math.max(...dataBmi) : 25;
     
-    // คำนวณขอบเขตแบบปรับอัตโนมัติ (Margin ±0.5)
     let yMin = Math.floor((minBmi - 0.5) * 10) / 10;
     let yMax = Math.ceil((maxBmi + 0.5) * 10) / 10;
     if (yMin === yMax) { yMin -= 1; yMax += 1; }
@@ -589,7 +709,7 @@ function renderHistoryTableAndChart() {
                 backgroundColor: 'rgba(231, 76, 60, 0.15)',
                 borderWidth: 3,
                 fill: true,
-                tension: 0.2, // ปรับความโค้งของเส้น
+                tension: 0.2,
                 pointRadius: 6,
                 pointHoverRadius: 9,
                 pointBackgroundColor: '#2980b9',
@@ -603,20 +723,16 @@ function renderHistoryTableAndChart() {
             plugins: {
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
-                            return ` BMI: ${context.parsed.y.toFixed(2)}`;
-                        }
+                        label: function(context) { return ` BMI: ${context.parsed.y.toFixed(2)}`; }
                     }
                 }
             },
             scales: {
                 y: {
                     title: { display: true, text: 'ค่าดัชนีมวลกาย (BMI)', font: { weight: 'bold' } },
-                    min: yMin, // ซูมขอบล่างแกน Y ให้พอดีกับค่าต่ำสุด
-                    max: yMax, // ซูมขอบบนแกน Y ให้พอดีกับค่าสูงสุด
-                    ticks: {
-                        stepSize: 0.2 // แสดงรายละเอียดทุกๆ 0.2 ความถี่
-                    },
+                    min: yMin,
+                    max: yMax,
+                    ticks: { stepSize: 0.2 },
                     grid: { color: 'rgba(0, 0, 0, 0.08)' }
                 },
                 x: {
@@ -659,39 +775,23 @@ const bentoFoodPool = {
         { name: "ข้าวไรซ์เบอร์รี่ + อกไก่ผัดเม็ดมะม่วงหิมพานต์", tags: ["nut"] },
         { name: "ข้าวกล้อง + ปลาแซลมอนย่างเกลือชมพู", tags: ["seafood"] },
         { name: "เส้นบุกบะหมี่ + ผัดฉ่าเนื้อปลากะพงรสจัด", tags: ["seafood"] },
-        { name: "ข้าวไรซ์เบอร์รี่ + สันในหมูอบน้ำผึ้งโฮมเมด", tags: [] },
-        { name: "ข้าวขมิ้น + อกไก่ย่างตะไคร้หอม", tags: [] },
-        { name: "พาสต้าโฮลวีต + ซอสโบโลเนสไก่สับลีน", tags: ["wheat"] },
-        { name: "ข้าวกล้อง + กุ้งคั่วพริกเกลือกระเทียมสด", tags: ["seafood"] },
-        { name: "ข้าวไรซ์เบอร์รี่ + คั่วกลิ้งอกไก่สับรสใต้", tags: [] },
-        { name: "เส้นบุกผัดไทย + เต้าหู้ขาวและกุ้งแห้ง", tags: ["seafood", "nut", "egg"] },
-        { name: "ข้าวกล้อง + ฉู่ฉี่ปลาทูสดไร้น้ำมัน", tags: ["seafood"] },
-        { name: "ข้าวไรซ์เบอร์รี่ + เนื้อวัวสไลด์ผัดซอสหัวหอม", tags: [] },
-        { name: "ข้าวกล้อง + ลาบทูน่าสลัดคลีนใบบัวบก", tags: ["seafood"] }
+        { name: "ข้าวไรซ์เบอร์รี่ + สันในหมูอบน้ำผึ้งโฮมเมด", tags: [] }
     ],
     side: [
         { name: "ไข่ต้มยางมะตูมเบอร์ใหญ่", tags: ["egg"] },
         { name: "เต้าหู้ขาวนึ่งโรยต้นหอมซีอิ๊วโซเดียมต่ำ", tags: [] },
         { name: "ไข่ตุ๋นสมุนไพรเนื้อเนียนใส่ไก่สับ", tags: ["egg"] },
-        { name: "ไข่ข้นไร้น้ำมันเนื้อนุ่มนิ่ม", tags: ["egg"] },
-        { name: "เต้าหู้เหลืองผัดถั่วงอกลีน", tags: [] },
-        { name: "ไข่ต้มสมุนไพรพะโล้แห้ง", tags: ["egg"] },
-        { name: "เต้าหู้ญี่ปุ่นทอดหม้อทอดไร้น้ำมันซอสเทริยากิ", tags: [] },
-        { name: "ลูกชิ้นอกไก่โฮมเมดนึ่งน้ำจิ้มซีฟู้ด", tags: [] }
+        { name: "เต้าหู้เหลืองผัดถั่วงอกลีน", tags: [] }
     ],
     veggie: [
         { name: "บล็อคโคลี่และแครอทต้มหวานธรรมชาติ", tags: [] },
         { name: "หน่อไม้ฝรั่งและเห็ดออรินจิผัดน้ำมันมะกอก", tags: [] },
-        { name: "กะหล่ำปลีตุ๋นเห็ดหอมรสกลมกล่อม", tags: [] },
-        { name: "ผักกวางตุ้งฮ่องเต้นึ่งกระเทียมโทน", tags: [] },
-        { name: "ผัดบล็อคโคลี่ใส่กุ้งสดแกะเปลือก", tags: ["seafood"] },
-        { name: "ผัดผักรวมมิตรเบญจพรรณ", tags: [] }
+        { name: "กะหล่ำปลีตุ๋นเห็ดหอมรสกลมกล่อม", tags: [] }
     ],
     snack: [
         { name: "แอปเปิ้ลเขียวสดคัดพิเศษ 1 ลูก", tags: [] },
         { name: "ฝรั่งกิมจูสดกรอบวิตามินซีสูง", tags: [] },
         { name: "แก้วมังกรเนื้อขาวหั่นชิ้นพอดีคำ", tags: [] },
-        { name: "ส้มสายน้ำผึ้งรสหวานอมเปรี้ยว 1 ลูก", tags: [] },
         { name: "โยเกิร์ตรสธรรมชาติไขมัน 0% 1 ถ้วย", tags: ["milk"] }
     ]
 };
@@ -709,7 +809,7 @@ function calculateBentoBMI() {
     const bmi = weight / (heightM * heightM);
 
     // บันทึกประวัติลงระบบ
-    saveBmiRecord(weight, heightCm, bmi);
+    saveBmiRecord(weight, heightCm, bmi, gender);
 
     let status = "", color = "", todo = [], dailyCalorie = 0;
 

@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V23</title>
+    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V24 (ระบบบันทึกประวัติ & บัญชีผู้ใช้)</title>
+    <!-- นำเข้า Chart.js สำหรับวาดกราฟ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-blue: #2980b9;
@@ -31,8 +33,9 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 620px;
+            max-width: 650px;
             width: 100%;
+            position: relative;
         }
         h1, h2, h3, h4 {
             text-align: center;
@@ -43,6 +46,33 @@
             border-bottom: 3px solid var(--primary-red);
             padding-bottom: 10px;
         }
+        
+        /* User Profile Bar Header */
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #eef5f9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--dark-blue);
+        }
+        .btn-logout {
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto !important;
+            margin-top: 0 !important;
+        }
+        .btn-logout:hover { background-color: #95a5a6; }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -58,7 +88,7 @@
             color: var(--dark-blue);
             font-size: 14px;
         }
-        input[type="number"], input[type="text"], select {
+        input[type="number"], input[type="text"], input[type="password"], select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -156,6 +186,15 @@
         .bmi-badge { padding: 15px; border-radius: 8px; color: white; text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
         .calorie-badge { background-color: var(--dark-blue); color: white; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; line-height: 1.5; }
 
+        .chart-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
         .meal-plan-card {
             background: #f8fafc;
             border: 1px solid #cbd5e1;
@@ -217,8 +256,36 @@
 
 <div class="container">
     
+    <!-- แถบแสดงชื่อผู้ใช้งานเมื่อล็อกอินแล้ว -->
+    <div id="userBar" class="user-bar" style="display:none;">
+        <span>👤 ผู้ใช้งาน: <span id="displayUsername" style="color:var(--primary-red);">Guest</span></span>
+        <button class="btn-logout" onclick="logoutUser()">ออกจากระบบ</button>
+    </div>
+
+    <!-- หน้าที่ 0: หน้าล็อกอิน / สมัครสมาชิก -->
+    <div id="authScreen" class="screen active">
+        <h1>🔐 เข้าสู่ระบบบัญชีสุขภาพ</h1>
+        <p style="text-align:center; font-size:14px; color:#666;">เข้าสู่ระบบเพื่อบันทึกประวัติ BMI และดูกราฟพัฒนาการย้อนหลัง</p>
+        
+        <div class="method-tabs">
+            <button type="button" class="tab-btn active" id="tabLogin" onclick="switchAuthMode('login')">เข้าสู่ระบบ</button>
+            <button type="button" class="tab-btn" id="tabRegister" onclick="switchAuthMode('register')">สมัครสมาชิกใหม่</button>
+        </div>
+
+        <div class="form-group">
+            <label for="authUsername">ชื่อผู้ใช้งาน (Username):</label>
+            <input type="text" id="authUsername" placeholder="กรอกชื่อผู้ใช้">
+        </div>
+        <div class="form-group">
+            <label for="authPassword">รหัสผ่าน (Password):</label>
+            <input type="password" id="authPassword" placeholder="กรอกรหัสผ่าน">
+        </div>
+
+        <button id="btnAuthSubmit" class="btn-next" onclick="handleAuthSubmit()">เข้าสู่ระบบ 🚀</button>
+    </div>
+
     <!-- หน้าที่ 1: หน้าแสดงข้อมูลความรู้ และตาราง BMI แยกชาย-หญิง -->
-    <div id="infoScreen" class="screen active">
+    <div id="infoScreen" class="screen">
         <h1>📊 ข้อมูลดัชนีมวลกาย BMI แยกชาย-หญิง</h1>
         <p style="line-height: 1.6; text-indent: 20px;">
             <b>BMI (Body Mass Index)</b> ใช้ประเมินสมดุลร่างกาย โดยสรีระผู้ชายและผู้หญิงมีความแตกต่างกันด้านมวลกล้ามเนื้อและไขมัน
@@ -264,7 +331,8 @@
         <div class="choice-section">
             <h3>⚡ กรุณาเลือกบริการที่ต้องการ</h3>
             <button class="btn-next" onclick="changeScreen('infoScreen', 'bentoFormScreen')">🍱 1. คำนวณ BMI และจัดเซ็ตกล่องข้าวสุขภาพ</button>
-            <button type="button" style="background-color: var(--primary-blue); margin-top:15px;" onclick="changeScreen('infoScreen', 'quickFormScreen')">📋 2. ตรวจสอบปริมาณสารอาหารมื้อนี้ (ด่วน)</button>
+            <button type="button" style="background-color: var(--primary-blue); margin-top:10px;" onclick="changeScreen('infoScreen', 'quickFormScreen')">📋 2. ตรวจสอบปริมาณสารอาหารมื้อนี้ (ด่วน)</button>
+            <button type="button" style="background-color: #8e44ad; margin-top:10px;" onclick="openHistoryGraphScreen()">📈 3. ดูประวัติและกราฟแนวโน้ม BMI ของฉัน</button>
         </div>
     </div>
 
@@ -305,7 +373,7 @@
         </div>
 
         <button class="btn-next" onclick="calculateBentoBMI()">คำนวณและจัดกล่องข้าว 🍱</button>
-        <button class="btn-back" onclick="changeScreen('bentoFormScreen', 'infoScreen')">⬅️ กลับไปหน้าแรก</button>
+        <button class="btn-back" onclick="changeScreen('bentoFormScreen', 'infoScreen')">⬅️ กลับไปหน้าหลัก</button>
     </div>
 
     <!-- หน้าที่ 3: หน้าแบบฟอร์มตรวจสอบสารอาหารมื้อด่วน -->
@@ -397,7 +465,7 @@
         </div>
 
         <button type="button" style="background-color: var(--primary-red); margin-top:10px;" onclick="processQuickAnalysis()">ประมวลผลวิเคราะห์สารอาหาร 📋</button>
-        <button class="btn-back" onclick="changeScreen('quickFormScreen', 'infoScreen')">⬅️ กลับไปหน้าแรก</button>
+        <button class="btn-back" onclick="changeScreen('quickFormScreen', 'infoScreen')">⬅️ กลับไปหน้าหลัก</button>
     </div>
 
     <!-- หน้าที่ 4: หน้าแสดงผลลัพธ์การจัดกล่องข้าว -->
@@ -406,7 +474,6 @@
         <div id="bmiBadge" class="bmi-badge"></div>
         <div id="calorieBadge" class="calorie-badge"></div>
 
-        <!-- เพิ่มการแสดงปริมาณอาหารแยกตามมื้อ -->
         <div class="meal-plan-card">
             <h3 style="margin-top:0; font-size:16px; color:var(--dark-blue);">🍽️ ปริมาณอาหารและพลังงานที่ควรได้รับแยกตามมื้อ:</h3>
             <table class="info-table" style="margin-top:5px;">
@@ -457,10 +524,13 @@
         </div>
         <button class="btn-reset-all" onclick="rerollAllFood()">🔄 สุ่มเปลี่ยนอาหารใหม่ทั้งหมด</button>
         <button class="btn-maps" onclick="findBentoMapsLocation()">📍 ค้นหาร้านขายอาหารเมนูนี้บน Google Maps</button>
+        
         <div class="todo-section">
             <h3>🏃‍♂️ Action Plan สำหรับคุณ</h3>
             <ul id="todoList"></ul>
         </div>
+        
+        <button style="background-color: #8e44ad; margin-top:15px;" onclick="openHistoryGraphScreen()">📈 ดูกราฟประวัติ BMI ของคุณ</button>
         <button class="btn-back" onclick="changeScreen('resultScreen', 'bentoFormScreen')">⬅️ กลับไปแก้ไขข้อมูลร่างกาย</button>
     </div>
 
@@ -497,7 +567,35 @@
 
         <div id="foodFeedbackDetail" style="margin-top:15px; font-size:14px; line-height:1.5; padding:12px; background:#fff; border:1px solid #ddd; border-radius:8px; margin-bottom: 15px;"></div>
 
-        <button class="btn-back" onclick="changeScreen('foodResultScreen', 'quickFormScreen')" style="width:100%">⬅️ กลับไปคำนวณใหม่</button>
+        <button style="background-color: #8e44ad;" onclick="openHistoryGraphScreen()">📈 ดูกราฟประวัติ BMI ของคุณ</button>
+        <button class="btn-back" onclick="changeScreen('foodResultScreen', 'quickFormScreen')">⬅️ กลับไปคำนวณใหม่</button>
+    </div>
+
+    <!-- หน้าที่ 6: หน้าแสดงประวัติและกราฟแนวโน้ม BMI -->
+    <div id="historyGraphScreen" class="screen">
+        <h2>📈 ประวัติและกราฟแนวโน้ม BMI รายวัน</h2>
+        
+        <div class="chart-card">
+            <canvas id="bmiChartCanvas" style="max-height: 300px; width:100%;"></canvas>
+        </div>
+
+        <h3>📜 ตารางประวัติการบันทึก</h3>
+        <table class="info-table" style="margin-bottom:15px;">
+            <thead>
+                <tr>
+                    <th>วันที่ / เวลา</th>
+                    <th>น้ำหนัก (กก.)</th>
+                    <th>ส่วนสูง (ซม.)</th>
+                    <th>ค่า BMI</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody">
+                <!-- ข้อมูลจะถูกโหลดใส่ตรงนี้ด้วย JS -->
+            </tbody>
+        </table>
+
+        <button style="background-color:#e74c3c;" onclick="clearBmiHistory()">🗑️ ล้างประวัติทั้งหมด</button>
+        <button class="btn-back" onclick="changeScreen('historyGraphScreen', 'infoScreen')">⬅️ กลับไปหน้าหลัก</button>
     </div>
 
 </div>
@@ -505,7 +603,183 @@
 <script>
 let currentMainFoodName = ""; 
 let currentInputMethod = "grams"; 
+let currentAuthMode = "login";
+let currentUser = null;
+let bmiChartInstance = null;
 
+// ==========================================
+// ระบบบัญชีผู้ใช้งาน (User Auth & LocalStorage)
+// ==========================================
+function switchAuthMode(mode) {
+    currentAuthMode = mode;
+    if (mode === 'login') {
+        document.getElementById('tabLogin').classList.add('active');
+        document.getElementById('tabRegister').classList.remove('active');
+        document.getElementById('btnAuthSubmit').innerText = "เข้าสู่ระบบ 🚀";
+    } else {
+        document.getElementById('tabLogin').classList.remove('active');
+        document.getElementById('tabRegister').classList.add('active');
+        document.getElementById('btnAuthSubmit').innerText = "สมัครสมาชิก 📝";
+    }
+}
+
+function handleAuthSubmit() {
+    const username = document.getElementById('authUsername').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+
+    if (!username || !password) {
+        alert("กรุณากรอกทั้งชื่อผู้ใช้และรหัสผ่านครับ"); return;
+    }
+
+    let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
+
+    if (currentAuthMode === 'register') {
+        if (users[username]) {
+            alert("ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว กรุณาใช้ชื่ออื่นครับ"); return;
+        }
+        users[username] = { password: password, history: [] };
+        localStorage.setItem('bentoUsers', JSON.stringify(users));
+        alert("สมัครสมาชิกเรียบร้อยแล้ว! ระบบกำลังเข้าสู่ระบบให้คุณ");
+        loginSuccess(username);
+    } else {
+        if (!users[username] || users[username].password !== password) {
+            alert("ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง"); return;
+        }
+        loginSuccess(username);
+    }
+}
+
+function loginSuccess(username) {
+    currentUser = username;
+    document.getElementById('displayUsername').innerText = username;
+    document.getElementById('userBar').style.display = 'flex';
+    document.getElementById('authUsername').value = '';
+    document.getElementById('authPassword').value = '';
+    changeScreen('authScreen', 'infoScreen');
+}
+
+function logoutUser() {
+    currentUser = null;
+    document.getElementById('userBar').style.display = 'none';
+    changeScreen(getCurrentActiveScreen(), 'authScreen');
+}
+
+function getCurrentActiveScreen() {
+    const activeScreen = document.querySelector('.screen.active');
+    return activeScreen ? activeScreen.id : 'infoScreen';
+}
+
+// ==========================================
+// ระบบบันทึกและจัดการประวัติ BMI รายวัน
+// ==========================================
+function saveBmiRecord(weight, height, bmi) {
+    if (!currentUser) return;
+
+    let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
+    if (!users[currentUser]) return;
+
+    const now = new Date();
+    const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+    const record = {
+        date: dateStr,
+        weight: weight,
+        height: height,
+        bmi: parseFloat(bmi.toFixed(2))
+    };
+
+    if (!users[currentUser].history) users[currentUser].history = [];
+    users[currentUser].history.push(record);
+    localStorage.setItem('bentoUsers', JSON.stringify(users));
+}
+
+function openHistoryGraphScreen() {
+    renderHistoryTableAndChart();
+    changeScreen(getCurrentActiveScreen(), 'historyGraphScreen');
+}
+
+function renderHistoryTableAndChart() {
+    if (!currentUser) return;
+
+    let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
+    const history = (users[currentUser] && users[currentUser].history) ? users[currentUser].history : [];
+
+    // 1. วาดตารางประวัติ
+    const tbody = document.getElementById('historyTableBody');
+    tbody.innerHTML = '';
+
+    if (history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลประวัติการบันทึก</td></tr>';
+    } else {
+        history.slice().reverse().forEach(item => {
+            let row = `<tr>
+                <td>${item.date}</td>
+                <td>${item.weight}</td>
+                <td>${item.height}</td>
+                <td style="font-weight:bold; color:var(--dark-blue);">${item.bmi}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // 2. วาดกราฟ BMI ด้วย Chart.js
+    const labels = history.map(item => item.date.split(' ')[0]);
+    const dataBmi = history.map(item => item.bmi);
+
+    const ctx = document.getElementById('bmiChartCanvas').getContext('2d');
+
+    if (bmiChartInstance) {
+        bmiChartInstance.destroy(); // ล้างกราฟเก่าก่อนวาดใหม่
+    }
+
+    bmiChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'ค่า BMI ของฉัน',
+                data: dataBmi,
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 5,
+                pointBackgroundColor: '#2980b9'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: { display: true, text: 'ค่าดัชนีมวลกาย (BMI)' },
+                    suggestedMin: 15,
+                    suggestedMax: 32
+                },
+                x: {
+                    title: { display: true, text: 'วันที่บันทึก' }
+                }
+            }
+        }
+    });
+}
+
+function clearBmiHistory() {
+    if (!currentUser) return;
+    if (confirm("คุณต้องการลบประวัติการบันทึก BMI ทั้งหมดใช่หรือไม่?")) {
+        let users = JSON.parse(localStorage.getItem('bentoUsers') || '{}');
+        if (users[currentUser]) {
+            users[currentUser].history = [];
+            localStorage.setItem('bentoUsers', JSON.stringify(users));
+            renderHistoryTableAndChart();
+        }
+    }
+}
+
+// ==========================================
+// ฟังก์ชันสลับหน้าจอและช่วยคำนวณ
+// ==========================================
 function changeScreen(hideId, showId) {
     const allScreens = document.querySelectorAll('.screen');
     allScreens.forEach(scr => { scr.classList.remove('active'); });
@@ -616,7 +890,7 @@ let currentWeights = {};
 let activeAllergies = [];
 
 // ==========================================
-// ฟังก์ชันวิเคราะห์สารอาหารมื้อด่วน (แยกเพศ & แยกมื้อ)
+// ฟังก์ชันวิเคราะห์สารอาหารมื้อด่วน
 // ==========================================
 function processQuickAnalysis() {
     const gender = document.querySelector('input[name="quickGender"]:checked').value;
@@ -630,6 +904,9 @@ function processQuickAnalysis() {
 
     const heightM = heightCm / 100;
     const bmi = weight / (heightM * heightM);
+
+    // บันทึกประวัติลงระบบ
+    saveBmiRecord(weight, heightCm, bmi);
 
     let uCarb = 0, uProtein = 0, uVeggie = 0;
     let foodLabelName = "เมนูอาหารที่ระบุ";
@@ -661,7 +938,6 @@ function processQuickAnalysis() {
     const totalWeight = uCarb + uProtein + uVeggie;
     let baseIdeal = 0, bmiText = "", targetColor = "";
 
-    // เกณฑ์น้ำหนักอาหารรวมต่อวันตามเพศและ BMI
     if (gender === 'ชาย') {
         if (bmi < 20.0) { bmiText = "ผอม"; baseIdeal = 1500; } 
         else if (bmi >= 20.0 && bmi < 25.0) { bmiText = "สมส่วน/ปกติ"; baseIdeal = 1250; } 
@@ -674,8 +950,7 @@ function processQuickAnalysis() {
         else { bmiText = "โรคอ้วน"; baseIdeal = 700; }
     }
 
-    // คำนวณตามสัดส่วนมื้อ
-    let mealRatio = 0.35; // default
+    let mealRatio = 0.35;
     let mealNameTh = "มื้อกลางวัน";
     if (mealType === 'breakfast') { mealRatio = 0.30; mealNameTh = "มื้อเช้า"; }
     else if (mealType === 'lunch') { mealRatio = 0.40; mealNameTh = "มื้อกลางวัน"; }
@@ -723,7 +998,7 @@ function processQuickAnalysis() {
 }
 
 // ==========================================
-// ฟังก์ชันคำนวณ Bento + คำนวณปริมาณแต่ละมื้อ
+// ฟังก์ชันคำนวณ Bento
 // ==========================================
 function calculateBentoBMI() {
     const gender = document.querySelector('input[name="gender"]:checked').value;
@@ -733,9 +1008,12 @@ function calculateBentoBMI() {
     
     const heightM = heightCm / 100; 
     const bmi = weight / (heightM * heightM);
+
+    // บันทึกประวัติลงระบบ
+    saveBmiRecord(weight, heightCm, bmi);
+
     let status = "", color = "", todo = [], dailyCalorie = 0;
 
-    // 1. คำนวณพลังงานรวมประจำวัน (TDEE ประมาณการ)
     if (gender === 'ชาย') {
         dailyCalorie = weight * 24 * 1.2;
         if (bmi < 20.0) { 
@@ -776,7 +1054,6 @@ function calculateBentoBMI() {
         }
     }
 
-    // 2. คำนวณปริมาณสารอาหารแต่ละมื้อ (เช้า 30%, กลางวัน 40%, เย็น 30%)
     const totalCal = Math.round(dailyCalorie);
     const meals = [
         { name: "🌅 มื้อเช้า (30%)", ratio: 0.30 },
@@ -787,10 +1064,9 @@ function calculateBentoBMI() {
     let tableHTML = "";
     meals.forEach(m => {
         const cal = Math.round(totalCal * m.ratio);
-        // สัดส่วนกรัมอาหารรวมมื้อนั้นๆ
-        const carbG = Math.round((cal * 0.45) / 4); // คาร์บ 45% พลังงาน (4 kcal/g)
-        const proteinG = Math.round((cal * 0.30) / 4); // โปรตีน 30% พลังงาน (4 kcal/g)
-        const veggieG = Math.round(m.ratio * (gender === 'ชาย' ? 400 : 320)); // ผักรวมสุทธิ
+        const carbG = Math.round((cal * 0.45) / 4);
+        const proteinG = Math.round((cal * 0.30) / 4);
+        const veggieG = Math.round(m.ratio * (gender === 'ชาย' ? 400 : 320));
 
         tableHTML += `
             <tr>

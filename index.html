@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V22</title>
+    <title>โปรแกรมคำนวณ BMI & สารอาหารสุขภาพ V23</title>
     <style>
         :root {
             --primary-blue: #2980b9;
@@ -31,7 +31,7 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 580px;
+            max-width: 620px;
             width: 100%;
         }
         h1, h2, h3, h4 {
@@ -154,7 +154,15 @@
         .screen.active { display: block !important; }
 
         .bmi-badge { padding: 15px; border-radius: 8px; color: white; text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-        .calorie-badge { background-color: var(--dark-blue); color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
+        .calorie-badge { background-color: var(--dark-blue); color: white; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; line-height: 1.5; }
+
+        .meal-plan-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
 
         .macro-container {
             display: grid;
@@ -324,6 +332,15 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label for="quickMealType">มื้ออาหารที่กำลังรับประทาน:</label>
+            <select id="quickMealType">
+                <option value="breakfast">🌅 มื้อเช้า (ประมาณ 30% ของวัน)</option>
+                <option value="lunch" selected>☀️ มื้อกลางวัน (มื้อหลัก 40% ของวัน)</option>
+                <option value="dinner">🌙 มื้อเย็น (เบาๆ 30% ของวัน)</option>
+            </select>
+        </div>
+
         <label>วิธีระบุปริมาณอาหารมื้อนี้:</label>
         <div class="method-tabs">
             <button type="button" class="tab-btn active" id="tabGrams" onclick="switchMethod('grams')">💾 กรอกแยกกรัม</button>
@@ -388,8 +405,26 @@
         <h2>📊 ผลการวิเคราะห์กล่องข้าวสุขภาพ</h2>
         <div id="bmiBadge" class="bmi-badge"></div>
         <div id="calorieBadge" class="calorie-badge"></div>
+
+        <!-- เพิ่มการแสดงปริมาณอาหารแยกตามมื้อ -->
+        <div class="meal-plan-card">
+            <h3 style="margin-top:0; font-size:16px; color:var(--dark-blue);">🍽️ ปริมาณอาหารและพลังงานที่ควรได้รับแยกตามมื้อ:</h3>
+            <table class="info-table" style="margin-top:5px;">
+                <thead>
+                    <tr>
+                        <th>มื้ออาหาร</th>
+                        <th>พลังงาน</th>
+                        <th>คาร์บ (แป้ง)</th>
+                        <th>โปรตีน (เนื้อ)</th>
+                        <th>ผัก/ใยอาหาร</th>
+                    </tr>
+                </thead>
+                <tbody id="mealPlanTableBody">
+                </tbody>
+            </table>
+        </div>
         
-        <h3>🍱 กล่องข้าว Bento ของคุณ</h3>
+        <h3>🍱 ตัวอย่างการจัด Bento สุขภาพ (สำหรับ 1 มื้อหลัก)</h3>
         <div class="bento-box">
             <div class="bento-grid">
                 <div class="bento-cell bento-main">
@@ -440,7 +475,7 @@
             <span id="foodStatusText"></span>
         </div>
 
-        <h3 style="margin-top:25px; text-align:left; font-size:15px; color:var(--dark-blue);">📊 เปรียบเทียบสิ่งที่คุณกิน (เป้าหมายอุดมคติ):</h3>
+        <h3 style="margin-top:25px; text-align:left; font-size:15px; color:var(--dark-blue);">📊 เปรียบเทียบสิ่งที่คุณกิน (เทียบเป้าหมายมื้อนี้):</h3>
         
         <div class="macro-container">
             <div class="macro-card carb-card">
@@ -581,12 +616,13 @@ let currentWeights = {};
 let activeAllergies = [];
 
 // ==========================================
-// ฟังก์ชันวิเคราะห์สารอาหารมื้อด่วน (แยกเพศ)
+// ฟังก์ชันวิเคราะห์สารอาหารมื้อด่วน (แยกเพศ & แยกมื้อ)
 // ==========================================
 function processQuickAnalysis() {
     const gender = document.querySelector('input[name="quickGender"]:checked').value;
     const weight = parseFloat(document.getElementById('quickWeight').value);
     const heightCm = parseFloat(document.getElementById('quickHeight').value);
+    const mealType = document.getElementById('quickMealType').value;
 
     if (!weight || !heightCm) {
         alert("กรุณากรอกน้ำหนักและส่วนสูง เพื่อประเมินผลโภชนาการให้สอดคล้องกับร่างกายครับ"); return;
@@ -623,25 +659,35 @@ function processQuickAnalysis() {
     }
 
     const totalWeight = uCarb + uProtein + uVeggie;
-    let minIdeal = 0, maxIdeal = 0, bmiText = "", targetColor = "";
+    let baseIdeal = 0, bmiText = "", targetColor = "";
 
-    // --- เงื่อนไขแยกเกณฑ์ BMI และน้ำหนักอาหารอุดมคติตามเพศ ---
+    // เกณฑ์น้ำหนักอาหารรวมต่อวันตามเพศและ BMI
     if (gender === 'ชาย') {
-        if (bmi < 20.0) { bmiText = "ผอม"; minIdeal = 450; maxIdeal = 550; } 
-        else if (bmi >= 20.0 && bmi < 25.0) { bmiText = "สมส่วน/ปกติ"; minIdeal = 380; maxIdeal = 460; } 
-        else if (bmi >= 25.0 && bmi < 30.0) { bmiText = "น้ำหนักเกิน"; minIdeal = 300; maxIdeal = 370; } 
-        else { bmiText = "โรคอ้วน"; minIdeal = 250; maxIdeal = 320; }
-    } else { // เพศหญิง
-        if (bmi < 18.5) { bmiText = "ผอม"; minIdeal = 380; maxIdeal = 450; } 
-        else if (bmi >= 18.5 && bmi < 24.0) { bmiText = "สมส่วน/ปกติ"; minIdeal = 320; maxIdeal = 390; } 
-        else if (bmi >= 24.0 && bmi < 29.0) { bmiText = "น้ำหนักเกิน"; minIdeal = 260; maxIdeal = 320; } 
-        else { bmiText = "โรคอ้วน"; minIdeal = 200; maxIdeal = 270; }
+        if (bmi < 20.0) { bmiText = "ผอม"; baseIdeal = 1500; } 
+        else if (bmi >= 20.0 && bmi < 25.0) { bmiText = "สมส่วน/ปกติ"; baseIdeal = 1250; } 
+        else if (bmi >= 25.0 && bmi < 30.0) { bmiText = "น้ำหนักเกิน"; baseIdeal = 1000; } 
+        else { bmiText = "โรคอ้วน"; baseIdeal = 850; }
+    } else {
+        if (bmi < 18.5) { bmiText = "ผอม"; baseIdeal = 1250; } 
+        else if (bmi >= 18.5 && bmi < 24.0) { bmiText = "สมส่วน/ปกติ"; baseIdeal = 1050; } 
+        else if (bmi >= 24.0 && bmi < 29.0) { bmiText = "น้ำหนักเกิน"; baseIdeal = 870; } 
+        else { bmiText = "โรคอ้วน"; baseIdeal = 700; }
     }
 
-    const idealAvg = (minIdeal + maxIdeal) / 2;
-    const targetCarb = Math.round(idealAvg * 0.35);
-    const targetProtein = Math.round(idealAvg * 0.35);
-    const targetVeggie = Math.round(idealAvg * 0.30);
+    // คำนวณตามสัดส่วนมื้อ
+    let mealRatio = 0.35; // default
+    let mealNameTh = "มื้อกลางวัน";
+    if (mealType === 'breakfast') { mealRatio = 0.30; mealNameTh = "มื้อเช้า"; }
+    else if (mealType === 'lunch') { mealRatio = 0.40; mealNameTh = "มื้อกลางวัน"; }
+    else if (mealType === 'dinner') { mealRatio = 0.30; mealNameTh = "มื้อเย็น"; }
+
+    const mealIdealWeight = Math.round(baseIdeal * mealRatio);
+    const minIdeal = Math.round(mealIdealWeight * 0.9);
+    const maxIdeal = Math.round(mealIdealWeight * 1.1);
+
+    const targetCarb = Math.round(mealIdealWeight * 0.35);
+    const targetProtein = Math.round(mealIdealWeight * 0.35);
+    const targetVeggie = Math.round(mealIdealWeight * 0.30);
 
     document.getElementById('carbVal').innerText = uCarb + "g";
     document.getElementById('proteinVal').innerText = uProtein + "g";
@@ -651,16 +697,16 @@ function processQuickAnalysis() {
     document.getElementById('proteinTarget').innerText = `เป้าหมาย: ${targetProtein}g`;
     document.getElementById('veggieTarget').innerText = `เป้าหมาย: ${targetVeggie}g`;
 
-    let feedback = `<b>🔍 แจกแจงโภชนาการสำหรับเมนู [${foodLabelName}] (${gender}):</b><br>`;
-    if (uCarb > targetCarb + 20) feedback += `• 🍚 คาร์โบไฮเดต: ค่อนข้างเยอะไปนิดสำหรับเพศ${gender} มื้อต่อไปลองลดแป้งลงครับ<br>`;
-    else if (uCarb < targetCarb - 20) feedback += `• 🍚 คาร์โบไฮเดรต: น้อยกว่าเกณฑ์ ร่างกายอาจโหยแป้งภายหลังได้<br>`;
-    else feedback += `• 🍚 คาร์โบไฮเดรต: สัดส่วนดีเหมาะสม<br>`;
+    let feedback = `<b>🔍 แจกแจงโภชนาการสำหรับ [${foodLabelName}] ใน [${mealNameTh}] (${gender}):</b><br>`;
+    if (uCarb > targetCarb + 20) feedback += `• 🍚 คาร์โบไฮเดต: สูงกว่าเกณฑ์ของ${mealNameTh} ลองลดปริมาณข้าว/เส้นลงเล็กน้อยครับ<br>`;
+    else if (uCarb < targetCarb - 20) feedback += `• 🍚 คาร์โบไฮเดรต: น้อยกว่าเกณฑ์ที่แนะนำใน${mealNameTh}<br>`;
+    else feedback += `• 🍚 คาร์โบไฮเดรต: สัดส่วนเหมาะสมดีมากสำหรับ${mealNameTh}<br>`;
 
-    if (uProtein < targetProtein - 15) feedback += `• 🥩 โปรตีน: <b style="color:var(--primary-red);">ปริมาณยังขาดอยู่</b> แนะนำเติมเนื้อสัตว์ไขมันต่ำหรือไข่ต้มเพื่อซ่อมแซมกล้ามเนื้อ<br>`;
-    else feedback += `• 🥩 โปรตีน: อยู่ในระดับที่เพียงพอกับโครงสร้างร่างกาย<br>`;
+    if (uProtein < targetProtein - 15) feedback += `• 🥩 โปรตีน: <b style="color:var(--primary-red);">ยังได้รับไม่พอ</b> แนะนำเพิ่มเนื้อสัตว์ไม่ติดมันหรือไข่ต้ม<br>`;
+    else feedback += `• 🥩 โปรตีน: ได้รับเพียงพอกับโครงสร้างร่างกาย<br>`;
 
-    if (uVeggie < targetVeggie - 25) feedback += `• 🥦 ผัก/วิตามิน: <b style="color:var(--primary-red);">น้อยเกินเกณฑ์ชัดเจน</b> ควรทานผักใบเขียวเพิ่มเพื่อเสริมไฟเบอร์<br>`;
-    else feedback += `• 🥦 ผัก/วิตามิน: ได้รับใยอาหารยอดเยี่ยมตามสัดส่วนสุขภาพดี<br>`;
+    if (uVeggie < targetVeggie - 25) feedback += `• 🥦 ผัก/วิตามิน: <b style="color:var(--primary-red);">น้อยเกินเกณฑ์</b> ควรทานผักเพิ่มเพื่อช่วยการขับถ่าย<br>`;
+    else feedback += `• 🥦 ผัก/วิตามิน: ปริมาณใยอาหารยอดเยี่ยม<br>`;
 
     if (totalWeight < minIdeal) targetColor = "#e67e22";
     else if (totalWeight > maxIdeal) targetColor = "#e74c3c";
@@ -670,14 +716,14 @@ function processQuickAnalysis() {
     badgeEl.style.backgroundColor = targetColor;
     badgeEl.innerText = `ปริมาณสุทธิมื้อนี้: ${totalWeight} กรัม`;
 
-    document.getElementById('foodStatusText').innerHTML = `เพศ: <b>${gender}</b> | ร่างกาย: <b>${weight} กก. / ${heightCm} ซม.</b> (BMI: ${bmi.toFixed(1)} เกณฑ์${bmiText})<br>น้ำหนักมื้ออาหารรวมที่แนะนำสำหรับคุณคือ: <b>${minIdeal} - ${maxIdeal} กรัม</b>`;
+    document.getElementById('foodStatusText').innerHTML = `เพศ: <b>${gender}</b> | ร่างกาย: <b>${weight} กก. / ${heightCm} ซม.</b> (BMI: ${bmi.toFixed(1)} - ${bmiText})<br>ปริมาณอาหารที่แนะนำเฉพาะ <b>${mealNameTh}</b> คือ: <b>${minIdeal} - ${maxIdeal} กรัม</b>`;
     document.getElementById('foodFeedbackDetail').innerHTML = feedback;
 
     changeScreen('quickFormScreen', 'foodResultScreen');
 }
 
 // ==========================================
-// ฟังก์ชันคำนวณและจัดกล่องข้าว Bento (แยกเพศ)
+// ฟังก์ชันคำนวณ Bento + คำนวณปริมาณแต่ละมื้อ
 // ==========================================
 function calculateBentoBMI() {
     const gender = document.querySelector('input[name="gender"]:checked').value;
@@ -689,10 +735,9 @@ function calculateBentoBMI() {
     const bmi = weight / (heightM * heightM);
     let status = "", color = "", todo = [], dailyCalorie = 0;
 
-    // --- คำนวณพลังงานขั้นต่ำ (BMR/TDEE) และเกณฑ์ BMI แยกตามเพศ ---
+    // 1. คำนวณพลังงานรวมประจำวัน (TDEE ประมาณการ)
     if (gender === 'ชาย') {
-        dailyCalorie = weight * 24 * 1.2; // พลังงานพื้นฐานชาย
-        
+        dailyCalorie = weight * 24 * 1.2;
         if (bmi < 20.0) { 
             status = "ผอมเกินเกณฑ์ (ชาย)"; color = "#f1c40f"; 
             currentWeights = { main: "คาร์บ 180g + เนื้อ 150g", side: "โปรตีน 90g", veggie: "ผัก 120g", snack: "90g" }; 
@@ -710,9 +755,8 @@ function calculateBentoBMI() {
             currentWeights = { main: "คาร์บ 70g + เนื้อ 140g", side: "โปรตีน 60g", veggie: "ผัก 200g", snack: "50g" }; 
             todo = ["งดเครื่องดื่มที่มีแอลกอฮอล์และน้ำหวานเด็ดขาด", "เน้นเดินเร็วหรือปั่นจักรยานเพื่อเซฟข้อเข่า"]; 
         }
-    } else { // เพศหญิง
-        dailyCalorie = weight * 22 * 1.2; // พลังงานพื้นฐานหญิง
-        
+    } else {
+        dailyCalorie = weight * 22 * 1.2;
         if (bmi < 18.5) { 
             status = "ผอมเกินเกณฑ์ (หญิง)"; color = "#f1c40f"; 
             currentWeights = { main: "คาร์บ 140g + เนื้อ 110g", side: "โปรตีน 70g", veggie: "ผัก 100g", snack: "70g" }; 
@@ -732,12 +776,41 @@ function calculateBentoBMI() {
         }
     }
 
+    // 2. คำนวณปริมาณสารอาหารแต่ละมื้อ (เช้า 30%, กลางวัน 40%, เย็น 30%)
+    const totalCal = Math.round(dailyCalorie);
+    const meals = [
+        { name: "🌅 มื้อเช้า (30%)", ratio: 0.30 },
+        { name: "☀️ มื้อกลางวัน (40%)", ratio: 0.40 },
+        { name: "🌙 มื้อเย็น (30%)", ratio: 0.30 }
+    ];
+
+    let tableHTML = "";
+    meals.forEach(m => {
+        const cal = Math.round(totalCal * m.ratio);
+        // สัดส่วนกรัมอาหารรวมมื้อนั้นๆ
+        const carbG = Math.round((cal * 0.45) / 4); // คาร์บ 45% พลังงาน (4 kcal/g)
+        const proteinG = Math.round((cal * 0.30) / 4); // โปรตีน 30% พลังงาน (4 kcal/g)
+        const veggieG = Math.round(m.ratio * (gender === 'ชาย' ? 400 : 320)); // ผักรวมสุทธิ
+
+        tableHTML += `
+            <tr>
+                <td style="font-weight:bold; text-align:left;">${m.name}</td>
+                <td style="color:var(--dark-blue); font-weight:bold;">${cal} kcal</td>
+                <td style="color:var(--carb-color);">${carbG}g</td>
+                <td style="color:var(--protein-color);">${proteinG}g</td>
+                <td style="color:var(--veggie-color);">${veggieG}g</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('mealPlanTableBody').innerHTML = tableHTML;
+
     activeAllergies = []; 
     document.querySelectorAll('.allergy-check:checked').forEach(chk => { activeAllergies.push(chk.value); });
     
     document.getElementById('bmiBadge').style.backgroundColor = color;
     document.getElementById('bmiBadge').innerHTML = `เพศ ${gender} | ค่า BMI: ${bmi.toFixed(2)}<br><small>(${status})</small>`;
-    document.getElementById('calorieBadge').innerHTML = `🎯 พลังงานที่แนะนำในมื้อนี้ (${gender}): <b>${Math.round(dailyCalorie / 3)} kcal</b>`;
+    document.getElementById('calorieBadge').innerHTML = `🎯 พลังงานที่แนะนำรวมต่อวัน (${gender}): <b>${totalCal} kcal</b>`;
     
     const todoList = document.getElementById('todoList'); todoList.innerHTML = "";
     todo.forEach(item => { let li = document.createElement('li'); li.innerText = item; todoList.appendChild(li); });

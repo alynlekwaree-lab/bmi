@@ -198,7 +198,7 @@
         .bento-snack { border: 3px solid var(--primary-blue); margin-top: 10px; min-height: 90px; }
         
         .btn-inline-refresh {
-            position: absolute; bottom: 8px; right: 8px; background-color: #e67e22; color: white;
+            position: absolute; bottom: 8px; right: 8px; background-color: #63b8ff; color: white;
             border: none; width: 35px; height: 35px; border-radius: 8px; font-size: 16px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
@@ -211,9 +211,9 @@
         .todo-section li { margin-bottom: 8px; }
 
         /* Leaderboard Highlight Styles */
-        .rank-1 { background-color: #fff9db !important; font-weight: bold; }
-        .rank-2 { background-color: #f1f3f5 !important; font-weight: bold; }
-        .rank-3 { background-color: #ffe8cc !important; font-weight: bold; }
+        .rank-1 { background-color: #f0ffff !important; font-weight: bold; }
+        .rank-2 { background-color: #f0f8ff !important; font-weight: bold; }
+        .rank-3 { background-color: #f0fff0 !important; font-weight: bold; }
         .my-rank { border: 2px solid var(--primary-red) !important; }
     </style>
 </head>
@@ -267,25 +267,25 @@
             </thead>
             <tbody>
                 <tr>
-                    <td style="color:#f1c40f; font-weight:bold;">ผอมเกินไป</td>
+                    <td style="color:#87ceff; font-weight:bold;">ผอมเกินไป</td>
                     <td>< 20.0</td>
                     <td>< 18.5</td>
                     <td>เสี่ยงขาดสารอาหาร</td>
                 </tr>
                 <tr>
-                    <td style="color:#27ae60; font-weight:bold;">สมส่วน / ปกติ</td>
+                    <td style="color:#7ec0ee; font-weight:bold;">สมส่วน / ปกติ</td>
                     <td>20.0 - 24.9</td>
                     <td>18.5 - 23.9</td>
                     <td>ความเสี่ยงโรคต่ำที่สุด</td>
                 </tr>
                 <tr>
-                    <td style="color:#e67e22; font-weight:bold;">น้ำหนักเกิน / ท้วม</td>
+                    <td style="color:#6ca6cd; font-weight:bold;">น้ำหนักเกิน / ท้วม</td>
                     <td>25.0 - 29.9</td>
                     <td>24.0 - 28.9</td>
                     <td>เริ่มเสี่ยงต่อโรคเรื้อรัง</td>
                 </tr>
                 <tr>
-                    <td style="color:#e74c3c; font-weight:bold;">โรคอ้วน</td>
+                    <td style="color:#4a708b; font-weight:bold;">โรคอ้วน</tda
                     <td>≥ 30.0</td>
                     <td>≥ 29.0</td>
                     <td>เสี่ยงสูงต่อโรคหัวใจ/เบาหวาน</td>
@@ -297,7 +297,7 @@
             <h3>⚡ กรุณาเลือกบริการที่ต้องการ</h3>
             <button class="btn-next" onclick="changeScreen('infoScreen', 'bentoFormScreen')">🍱 1. คำนวณ BMI และจัดเซ็ตกล่องข้าวสุขภาพ</button>
             <button type="button" style="background-color: #8e44ad; margin-top:12px;" onclick="openHistoryGraphScreen()">📈 2. ดูประวัติและกราฟแนวโน้ม BMI ของฉัน</button>
-            <button type="button" class="btn-leaderboard" onclick="openLeaderboardScreen()">🏆 3. ตารางจัดอันดับสุขภาพกับผู้ใช้อื่น (Leaderboard)</button>
+            <button type="button" class="btn-leaderboard" onclick="openLeaderboardScreen()">🏆 3. ตารางจัดอันดับสุขภาพ (Leaderboard)</button>
         </div>
     </div>
 

@@ -7,10 +7,6 @@
     <!-- Chart.js & Datalabels -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    
-    <!-- Firebase Cloud Database (เวอร์ชันเว็บ) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
@@ -82,22 +78,22 @@
     <!-- หน้าเข้าสู่ระบบ -->
     <div id="login-form">
         <h2>🍱 BentoBalance</h2>
-        <p style="text-align: center; color: #777; font-size: 13px; margin-bottom: 15px;">เข้าสู่ระบบเพื่อใช้งานทุกอุปกรณ์</p>
+        <p style="text-align: center; color: #777; font-size: 13px; margin-bottom: 15px;">เข้าสู่ระบบใช้งานในเครื่องนี้</p>
         <form onsubmit="handleLogin(event)">
             <div class="form-group"><label>ชื่อผู้ใช้งาน (Username)</label><input type="text" id="login-username" required placeholder="กรอกชื่อผู้ใช้"></div>
             <div class="form-group"><label>รหัสผ่าน</label><input type="password" id="login-password" required placeholder="กรอกรหัสผ่าน"></div>
-            <button type="submit" id="login-btn">เข้าสู่ระบบ Cloud</button>
+            <button type="submit">เข้าสู่ระบบ</button>
         </form>
-        <div class="toggle-text">ยังไม่มีบัญชีออนไลน์? <a href="#" onclick="toggleForm('signup')">สร้างบัญชีใหม่ที่นี่</a></div>
+        <div class="toggle-text">ยังไม่มีบัญชี? <a href="#" onclick="toggleForm('signup')">สร้างบัญชีใหม่ที่นี่</a></div>
     </div>
 
     <!-- หน้าสมัครสมาชิก -->
     <div id="signup-form" class="hidden">
         <h2>สร้างบัญชี BentoBalance</h2>
         <form onsubmit="handleSignUp(event)">
-            <div class="form-group"><label>ตั้งชื่อผู้ใช้งาน (Username)</label><input type="text" id="signup-username" required placeholder="ภาษาอังกฤษหรือตัวเลข"></div>
+            <div class="form-group"><label>ตั้งชื่อผู้ใช้งาน (Username)</label><input type="text" id="signup-username" required placeholder="เช่น bento_user"></div>
             <div class="form-group"><label>ตั้งรหัสผ่าน</label><input type="password" id="signup-password" required placeholder="กำหนดรหัสผ่าน"></div>
-            <button type="submit" id="signup-btn">ลงทะเบียนบัญชีออนไลน์</button>
+            <button type="submit">ลงทะเบียนใช้งานในเครื่อง</button>
         </form>
         <div class="toggle-text">มีบัญชีแล้ว? <a href="#" onclick="toggleForm('login')">กลับไปเข้าสู่ระบบ</a></div>
     </div>
@@ -108,7 +104,7 @@
             <div class="user-profile-summary">
                 <div id="header-avatar" class="profile-avatar">👤</div>
                 <div>
-                    <div style="font-size: 11px; color: #27ae60; font-weight: bold;">🟢 เชื่อมต่อคลาวด์แล้ว</div>
+                    <div style="font-size: 11px; color: #27ae60; font-weight: bold;">💾 บันทึกในเครื่องถาวรแล้ว</div>
                     <strong id="welcome-msg" style="font-size: 16px;">คุณ ยูสเซอร์</strong>
                 </div>
             </div>
@@ -138,7 +134,7 @@
                             <tr><th>อันดับ</th><th>วันที่</th><th>ค่า BMI</th><th>สถานะ</th></tr>
                         </thead>
                         <tbody id="rank-table-body">
-                            <tr><td colspan="4" style="color:#999;">กำลังโหลดข้อมูล...</td></tr>
+                            <tr><td colspan="4" style="color:#999;">ไม่มีข้อมูลจัดอันดับ</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -225,7 +221,7 @@
             <div class="form-group"><label>ปีเกิด (พ.ศ.)</label><input type="number" id="settings-birthyear"></div>
         </div>
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="saveSettings()" style="background:#2ecc71;">💾 บันทึกข้อมูลคลาวด์</button>
+            <button onclick="saveSettings()" style="background:#2ecc71;">💾 บันทึกข้อมูล</button>
             <button onclick="goBackToDashboard()" style="background:#95a5a6;">ยกเลิก</button>
         </div>
         <div class="logout-section"><button onclick="handleLogout()" style="background: #e74c3c;">🚪 ออกจากระบบ</button></div>
@@ -234,25 +230,9 @@
 </div>
 
 <script>
-    // -----------------------------------------------------------------
-    // 🔥 การเชื่อมต่อ Firebase Database ออนไลน์ (ใช้พื้นที่เก็บข้อมูลฟรีของ Google)
-    // -----------------------------------------------------------------
-    const firebaseConfig = {
-        apiKey: "AIzaSyDemoKeyForBentoBalanceApp2026",
-        authDomain: "bentobalance-app.firebaseapp.com",
-        projectId: "bentobalance-app",
-        storageBucket: "bentobalance-app.appspot.com",
-        messagingSenderId: "1234567890",
-        appId: "1:1234567890:web:bentobalance1234"
-    };
-    
-    // ตั้งค่าตัวเลือกฐานข้อมูลสำรองอัตโนมัติหากยังไม่ได้ผูก Key จริง
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    const db = firebase.firestore();
-
     Chart.register(ChartDataLabels);
 
-    let currentUsername = ""; 
+    let currentUsername = "";
     let userProfile = { nickname: "", gender: "ชาย", birthYear: 2550, profileImage: "", bmiHistory: [] };
     let bmiLineChart, bmiBarChart, macroPieChart;
     let currentBmiCategory = "normal";
@@ -275,15 +255,19 @@
         }
     };
 
-    // ล็อกอินอัตโนมัติหากบันทึกค้างไว้ในเครื่อง
+    // ล็อกอินค้างไว้อัตโนมัติเมื่อเปิดเบราว์เซอร์
     window.onload = function() {
-        const savedUser = localStorage.getItem('bentobalance_active_user');
-        if (savedUser) {
-            currentUsername = savedUser;
-            loadUserDataFromCloud(savedUser);
-        } else {
-            toggleForm('login');
+        const activeUser = localStorage.getItem('bentobalance_active_user');
+        if (activeUser) {
+            const allUsers = JSON.parse(localStorage.getItem('bentobalance_users_db')) || {};
+            if (allUsers[activeUser]) {
+                currentUsername = activeUser;
+                userProfile = allUsers[activeUser];
+                showDashboardView();
+                return;
+            }
         }
+        toggleForm('login');
     };
 
     function toggleForm(formType) {
@@ -291,112 +275,56 @@
         document.getElementById('signup-form').className = formType === 'signup' ? '' : 'hidden';
     }
 
-    // ☁️ ระบบลงทะเบียนบัญชีออนไลน์ขึ้น Firebase
-    async function handleSignUp(event) {
+    // 💾 ระบบลงทะเบียนแบบเก็บบันทึกในเครื่องถาวร
+    function handleSignUp(event) {
         event.preventDefault();
         const username = document.getElementById('signup-username').value.trim().toLowerCase();
         const password = document.getElementById('signup-password').value;
-        const btn = document.getElementById('signup-btn');
-        
-        btn.innerText = "กำลังลงทะเบียน...";
-        btn.disabled = true;
 
-        try {
-            // เช็คว่ามีผู้ใช้นี้ในคลาวด์แล้วหรือยัง
-            const userDoc = await db.collection('users').doc(username).get();
-            if (userDoc.exists) {
-                alert("ชื่อผู้ใช้นี้ถูกใช้งานแล้ว! กรุณาใช้ชื่ออื่น");
-                btn.innerText = "ลงทะเบียนบัญชีออนไลน์";
-                btn.disabled = false;
-                return;
-            }
-
-            const newUser = {
-                username: username,
-                password: password,
-                nickname: username,
-                gender: "ชาย",
-                birthYear: 2550,
-                profileImage: "",
-                bmiHistory: []
-            };
-
-            await db.collection('users').doc(username).set(newUser);
-            alert("สร้างบัญชีออนไลน์สำเร็จ! คุณสามารถนำ Username นี้ไปล็อกอินข้ามเครื่องได้ทันที");
-            toggleForm('login');
-        } catch (error) {
-            // สำรองลง LocalStorage หากคลาวด์มีปัญหา
-            saveLocalBackup(username, password);
+        let allUsers = JSON.parse(localStorage.getItem('bentobalance_users_db')) || {};
+        if (allUsers[username]) {
+            alert("ชื่อผู้ใช้นี้มีในเครื่องแล้ว! โปรดใช้ชื่ออื่น หรือไปที่หน้าเข้าสู่ระบบ");
+            return;
         }
-        btn.innerText = "ลงทะเบียนบัญชีออนไลน์";
-        btn.disabled = false;
+
+        allUsers[username] = {
+            username: username,
+            password: password,
+            nickname: username,
+            gender: "ชาย",
+            birthYear: 2550,
+            profileImage: "",
+            bmiHistory: []
+        };
+
+        localStorage.setItem('bentobalance_users_db', JSON.stringify(allUsers));
+        alert("สร้างบัญชีสำเร็จ! รหัสผ่านและข้อมูลของคุณจะถูกบันทึกค้างไว้ในเครื่องนี้อย่างปลอดภัย");
+        toggleForm('login');
     }
 
-    // ☁️ ระบบเข้าสู่ระบบข้ามเครื่อง
-    async function handleLogin(event) {
+    // 💾 ระบบเข้าสู่ระบบ
+    function handleLogin(event) {
         event.preventDefault();
         const username = document.getElementById('login-username').value.trim().toLowerCase();
         const password = document.getElementById('login-password').value;
-        const btn = document.getElementById('login-btn');
 
-        btn.innerText = "กำลังตรวจสอบ...";
-        btn.disabled = true;
-
-        try {
-            const userDoc = await db.collection('users').doc(username).get();
-            if (userDoc.exists && userDoc.data().password === password) {
-                currentUsername = username;
-                userProfile = userDoc.data();
-                localStorage.setItem('bentobalance_active_user', username);
-                showDashboardView();
-            } else {
-                // ตรวจสอบข้อมูลสำรองในเครื่องเผื่อออฟไลน์
-                const localUsers = JSON.parse(localStorage.getItem('bentobalance_local_users')) || {};
-                if (localUsers[username] && localUsers[username].password === password) {
-                    currentUsername = username;
-                    userProfile = localUsers[username];
-                    localStorage.setItem('bentobalance_active_user', username);
-                    showDashboardView();
-                } else {
-                    alert("ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง!");
-                }
-            }
-        } catch (error) {
-            alert("เกิดข้อผิดพลาดในการเชื่อมต่อคลาวด์ โปรดลองอีกครั้ง");
-        }
-        btn.innerText = "เข้าสู่ระบบ Cloud";
-        btn.disabled = false;
-    }
-
-    async function loadUserDataFromCloud(username) {
-        try {
-            const userDoc = await db.collection('users').doc(username).get();
-            if (userDoc.exists) {
-                userProfile = userDoc.data();
-                showDashboardView();
-            } else {
-                handleLogout();
-            }
-        } catch (e) {
+        let allUsers = JSON.parse(localStorage.getItem('bentobalance_users_db')) || {};
+        
+        if (allUsers[username] && allUsers[username].password === password) {
+            currentUsername = username;
+            userProfile = allUsers[username];
+            localStorage.setItem('bentobalance_active_user', username); // จำสถานะไว้
             showDashboardView();
+        } else {
+            alert("ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง!");
         }
     }
 
-    async function saveAllDataToCloud() {
+    function saveDataToStorage() {
         if (!currentUsername) return;
-        // บันทึกขนานทั้งคลาวด์และเครื่อง
-        try { await db.collection('users').doc(currentUsername).set(userProfile); } catch (e) {}
-        let localUsers = JSON.parse(localStorage.getItem('bentobalance_local_users')) || {};
-        localUsers[currentUsername] = userProfile;
-        localStorage.setItem('bentobalance_local_users', JSON.stringify(localUsers));
-    }
-
-    function saveLocalBackup(username, password) {
-        let localUsers = JSON.parse(localStorage.getItem('bentobalance_local_users')) || {};
-        localUsers[username] = { username: username, password: password, nickname: username, gender: "ชาย", birthYear: 2550, profileImage: "", bmiHistory: [] };
-        localStorage.setItem('bentobalance_local_users', JSON.stringify(localUsers));
-        alert("สมัครสมาชิกสำเร็จ (โหมดใช้งานในเครื่อง)");
-        toggleForm('login');
+        let allUsers = JSON.parse(localStorage.getItem('bentobalance_users_db')) || {};
+        allUsers[currentUsername] = userProfile;
+        localStorage.setItem('bentobalance_users_db', JSON.stringify(allUsers));
     }
 
     function renderAvatar(elementId) {
@@ -458,11 +386,11 @@
         };
     }
 
-    async function saveSettings() {
+    function saveSettings() {
         userProfile.nickname = document.getElementById('settings-nickname').value || currentUsername;
         userProfile.gender = document.getElementById('settings-gender').value;
         userProfile.birthYear = parseInt(document.getElementById('settings-birthyear').value) || 2550;
-        await saveAllDataToCloud();
+        saveDataToStorage();
         showDashboardView();
     }
 
@@ -511,7 +439,7 @@
         }
     }
 
-    async function goToBentoPage(event) {
+    function goToBentoPage(event) {
         event.preventDefault();
         const weight = parseFloat(document.getElementById('weight').value);
         const height = parseFloat(document.getElementById('height').value);
@@ -528,7 +456,7 @@
         
         if(!userProfile.bmiHistory) userProfile.bmiHistory = [];
         userProfile.bmiHistory.push(newRecord);
-        await saveAllDataToCloud();
+        saveDataToStorage();
 
         updateDashboardData();
 
@@ -539,10 +467,10 @@
         generateBentoPlan(bmi, weight, height);
     }
 
-    async function deleteHistoryItem(id) {
+    function deleteHistoryItem(id) {
         if(confirm("ยืนยันการลบประวัตินี้?")) {
             userProfile.bmiHistory = userProfile.bmiHistory.filter(item => item.id !== id);
-            await saveAllDataToCloud();
+            saveDataToStorage();
             updateDashboardData();
         }
     }
@@ -667,4 +595,3 @@
 </script>
 </body>
 </html>
-
